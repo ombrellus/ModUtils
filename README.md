@@ -1,5 +1,5 @@
 # ModUtils
-General library for WindowKill modding
+General library for WindowKill modding (Current version 0.1.2)
 
 GameBanana page: https://gamebanana.com/mods/500748
 
@@ -13,7 +13,7 @@ After doing what is stated above, follow the set-up guide to get your mod up and
 
 GameBanana guide: https://gamebanana.com/tuts/17300
 
-Wiki: *TO-DO*
+Wiki: https://github.com/ombrellus/ModUtils/wiki
 
 ## Features
 This is a multifunction content mod library for WindowKill, that allows modders to easily:
