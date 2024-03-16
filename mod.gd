@@ -14,9 +14,13 @@ class modUtils extends Node:
 	var customUpgrades:Dictionary = {}
 	var customOptions:Array[Dictionary] = []
 	var customBosses:Array[Dictionary] = []
+	var customBossQueue:Array[Dictionary] = []
 	var customEnemies:Array[Dictionary] = []
 	
 	var optionPage:Window
+	var gameScene:Node
+	
+	#region CUSTOM ENEMIES AND BOSSES
 	
 	func addEnemyToPool(modName:String,name:String,_weigth:float):
 		customEnemies.append({type = load("res://modres/"+modName+ "/enemies/" +name+"/"+name+".scn"),weight = _weigth,distribution = load("res://modres/"+modName+ "/enemies/" +name+"/curve.tres"),waveWeight = 1.0,mod=modName})
@@ -26,11 +30,26 @@ class modUtils extends Node:
 			if i.mod == modName:
 				customEnemies.remove_at(customEnemies.find(i))
 	
+	func resetModBosses(modName:String):
+		for i in customBosses:
+			if i.mod == modName:
+				customBosses.remove_at(customBosses.find(i))
+	
+	func resetModBossQueue(modName:String):
+		for i in customBossQueue:
+			if i.mod == modName:
+				customBossQueue.remove_at(customBossQueue.find(i))
+	
 	func addBossToPool(modName:String,name:String,possibility:float = 1.0,amounts = 1):
 		customBosses.append({type = load("res://modres/"+modName+ "/bosses/" +name+"/"+name+".scn"),
 		weight = possibility,
 		size = amounts,
 		mod=modName})
+	
+	func addBossToQueue(modName:String,name:String,pos:int):
+		customBossQueue.append({mod=modName,type= load("res://modres/"+modName+ "/bosses/" +name+"/"+name+".scn"),position = pos})
+	
+	#endregion
 	
 	#region CUSTOM UPGRADES
 	func resetModUpgrades(modName:String):
@@ -228,19 +247,25 @@ class modUtils extends Node:
 	signal enemyDied
 	signal bossDied
 	
+	signal bossQueueUpdated
+	
 	func _ready():
 		var test = ProjectSettings.load_resource_pack(gumm.get_full_path("mod://pack.pck"))
 		get_tree().node_added.connect(on_new_node)
 		get_tree().node_removed.connect(on_kill_node)
 	
+	#region NEW NODE HANDLING
 	func on_new_node(node:Node):
 		if isTitle(node):
 			onTitle.emit(node)
 		if isMain(node):
 			onMain.emit(node)
-			
+			gameScene = node
 			node.ready.connect(func():
-				node.enemySelection += customEnemies)
+				node.enemySelection += customEnemies
+				for i in customBossQueue:
+					gameScene.bossQueue.insert(i.position,i.type)
+			)
 		if isShop(node):
 			onShop.emit(node)
 			node.ready.connect(func():
@@ -249,6 +274,17 @@ class modUtils extends Node:
 			enemySpawned.emit(node)
 			print(node.get_node("Triangle").material)
 		if node.is_in_group("boss_main"):
+			if gameScene.bossQueue.size() == 0:
+				gameScene.bossQueue = [
+					gameScene.BossSpike, gameScene.BossSnake, gameScene.BossSlime,
+					gameScene.BossSpike, gameScene.BossSnake, gameScene.BossSlime, gameScene.BossVirus,
+				]
+				for i in customBosses:
+					if i.weight == 1.0:
+						gameScene.bossQueue.append(i.type)
+					elif randf() < i.weight:
+						gameScene.bossQueue.append(i.type)
+				gameScene.bossQueue.shuffle()
 			bossSpawned.emit(node)
 		if node.is_in_group("coin"):
 			coinSpawned.emit(node)
@@ -267,10 +303,37 @@ class modUtils extends Node:
 					elif i.type == "choice":
 						#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "choice",choicesOption=choices,default=defaultChoice,extraCallable=extraActivationCallable})
 						addCustomChoiceOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.choicesOption,i.default,i.extraCallable))
-	
+	#endregion
 	
 	func on_kill_node(node:Node):
 		if node.is_in_group("enemy"):
 			enemyDied.emit(node)
 		if node.is_in_group("boss_main"):
 			bossDied.emit(node)
+	
+	
+	#region DEBUG
+	func _debugWindow():
+		var debugWin = addGameWindow("debug",100,Vector2(300,300),get_tree().current_scene,false,true)
+		var cont = Control.new()
+		cont.layout_direction =Control.LAYOUT_DIRECTION_LTR
+		cont.set_anchors_preset(Control.PRESET_FULL_RECT)
+		cont.size = Vector2(300,300)
+		cont.mouse_filter=Control.MOUSE_FILTER_PASS
+		debugWin.add_child(cont)
+		var holder = VBoxContainer.new()
+		holder.layout_direction = Control.LAYOUT_DIRECTION_INHERITED
+		holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+		holder.size = Vector2(300,300)
+		holder.mouse_filter=Control.MOUSE_FILTER_PASS
+		cont.add_child(holder)
+		var uselessText = Label.new()
+		uselessText.text = "Spawn next boss"
+		holder.add_child(uselessText)
+		var butt = Button.new()
+		butt.text = "Debuggg"
+		butt.button_down.connect(func():
+			Global.main.spawnBoss())
+		holder.add_child(butt)
+		
+	#endregion
