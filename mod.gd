@@ -18,6 +18,7 @@ class modUtils extends Node:
 	var customBossQueue:Array[Dictionary] = []
 	var customEnemies:Array[Dictionary] = []
 	var customCharacters:Array[Dictionary] =[]
+	var customTabs:Array[String] =[]
 	
 	var optionPage:Window
 	var gameScene:Node
@@ -105,7 +106,6 @@ class modUtils extends Node:
 	}
 		Players.charData.merge(actual)
 		customCharAbility.merge(actualAbility)
-		print("if i am called twice this is bad")
 		customCharacters.append({gameName =data.displayName,name = data.internalName,mod = modName,pos = characterNum,img = data.spritesExtension})
 		Players.unlockedCharList.append(characterNum)
 		characterNum+=1
@@ -126,7 +126,11 @@ class modUtils extends Node:
 	func addCustomToggleOptionDirectToMenu(modName:String,optionMenuName:String,page:String, optionInternal:String,startsEnabled:bool=false, extraActivationCallable:Callable=func(val):pass):
 		#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
 		var option_class = load("res://src/ui/options/option.gd")
-		var option_list = optionPage.find_child("CanvasLayer").find_child("Control").find_child("VBoxContainer").find_child("tabContainer").find_child(page).find_child("VBoxContainer")
+		var option_list
+		var option_tabs = optionPage.find_child("CanvasLayer").find_child("Control").find_child("Container").find_child("VBoxContainer").find_child("tabContainer").get_children()
+		for s in option_tabs:
+			if s.name == page:
+				option_list = s
 		var option = load("res://src/ui/options/option.tscn").instantiate()
 		option.type = option_class.Type.toggle
 		option.tooltip = modName
@@ -145,7 +149,7 @@ class modUtils extends Node:
 			Global.options[optionInternal] = val
 		)
 		toggle.toggled.connect(extraActivationCallable)
-		option_list.add_child.call_deferred(option)
+		option_list.get_child(0).add_child.call_deferred(option)
 	
 	func addCustomSliderOption(modName:String,optionMenuName:String,page:String, optionInternal:String,sliderSettings:Vector4= Vector4(0,50,25,1), extraActivationCallable:Callable=func(val):pass):
 		customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "slider",slider=sliderSettings,extraCallable=extraActivationCallable})
@@ -153,7 +157,11 @@ class modUtils extends Node:
 	func addCustomSliderOptionDirectToMenu(modName:String,optionMenuName:String,page:String, optionInternal:String,sliderSettings:Vector4 = Vector4(0,50,25,1), extraActivationCallable:Callable=func(val):pass):
 		#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
 		var option_class = load("res://src/ui/options/option.gd")
-		var option_list = optionPage.find_child("CanvasLayer").find_child("Control").find_child("VBoxContainer").find_child("tabContainer").find_child(page).find_child("VBoxContainer")
+		var option_list
+		var option_tabs = optionPage.find_child("CanvasLayer").find_child("Control").find_child("Container").find_child("VBoxContainer").find_child("tabContainer").get_children()
+		for s in option_tabs:
+			if s.name == page:
+				option_list = s
 		var option = load("res://src/ui/options/option.tscn").instantiate()
 		option.type = option_class.Type.slider
 		option.tooltip = modName
@@ -174,7 +182,7 @@ class modUtils extends Node:
 			Global.options[optionInternal] = val
 		)
 		slider.value_changed.connect(extraActivationCallable)
-		option_list.add_child.call_deferred(option)
+		option_list.get_child(0).add_child.call_deferred(option)
 	
 	func addCustomChoiceOption(modName:String,optionMenuName:String,page:String, optionInternal:String,choices:Dictionary, defaultChoice:String,extraActivationCallable:Callable=func(val):pass):
 		customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "choice",choicesOption=choices,default=defaultChoice,extraCallable=extraActivationCallable})
@@ -182,7 +190,11 @@ class modUtils extends Node:
 	func addCustomChoiceOptionDirectToMenu(modName:String,optionMenuName:String,page:String, optionInternal:String,choices:Dictionary, defaultChoice:String,extraActivationCallable:Callable=func(val):pass):
 		#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
 		var option_class = load("res://src/ui/options/option.gd")
-		var option_list = optionPage.find_child("CanvasLayer").find_child("Control").find_child("VBoxContainer").find_child("tabContainer").find_child(page).find_child("VBoxContainer")
+		var option_list
+		var option_tabs = optionPage.find_child("CanvasLayer").find_child("Control").find_child("Container").find_child("VBoxContainer").find_child("tabContainer").get_children()
+		for s in option_tabs:
+			if s.name == page:
+				option_list = s
 		var option = load("res://src/ui/options/option.tscn").instantiate()
 		option.type = option_class.Type.choice
 		option.tooltip = modName
@@ -200,7 +212,31 @@ class modUtils extends Node:
 			Global.options[optionInternal] = val
 		)
 		choice.item_selected.connect(extraActivationCallable)
-		option_list.add_child.call_deferred(option)
+		option_list.get_child(0).add_child.call_deferred(option)
+	
+	func addCustomOptionTab(name:String):
+		customTabs.append(name)
+	
+	func addCustomOptionTabDirect(name:String):
+		var tab = MarginContainer.new()
+		tab.custom_minimum_size= Vector2(800,0)
+		tab.set_anchors_preset(Control.PRESET_CENTER_TOP)
+		tab.size = Vector2(940,666)
+		tab.position = Vector2(-290,0)
+		tab.size_flags_horizontal =Control.SIZE_EXPAND_FILL
+		tab.size_flags_vertical =Control.SIZE_EXPAND_FILL
+		tab.add_theme_constant_override("margin_top",60)
+		tab.add_theme_constant_override("margin_bottom",60)
+		tab.name = name
+		optionPage.find_child("CanvasLayer").find_child("Control").find_child("Container").find_child("VBoxContainer").find_child("tabContainer").add_child(tab)
+		var box = VBoxContainer.new()
+		box.custom_minimum_size = Vector2(940,0)
+		box.size_flags_horizontal =Control.SIZE_SHRINK_CENTER
+		box.size_flags_vertical =Control.SIZE_FILL
+		box.add_theme_constant_override("separation",40)
+		box.name = "VBoxContainer"
+		tab.add_child(box)
+		optionPage.tabCount += 1
 	
 	#endregion
 		
@@ -337,16 +373,23 @@ class modUtils extends Node:
 			if node.get_script().get_path() == "res://src/ui/options/options.gd":
 				onOptions.emit(node)
 				optionPage = node
-				optionPage.ready.connect(func():for i in customOptions:
-					if i.type == "toggle":
-						#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
-						addCustomToggleOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.enabled,i.extraCallable)
-					elif i.type == "slider":
-						#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "slider",slider=sliderSettings,extraCallable=extraActivationCallable})
-						addCustomSliderOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.slider,i.extraCallable)
-					elif i.type == "choice":
-						#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "choice",choicesOption=choices,default=defaultChoice,extraCallable=extraActivationCallable})
-						addCustomChoiceOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.choicesOption,i.default,i.extraCallable))
+				optionPage.ready.connect(func():
+					for i in customTabs:
+						addCustomOptionTabDirect(i)
+					for i in customOptions:
+						if i.type == "toggle":
+							
+							#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
+							addCustomToggleOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.enabled,i.extraCallable)
+						elif i.type == "slider":
+							
+							#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "slider",slider=sliderSettings,extraCallable=extraActivationCallable})
+							addCustomSliderOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.slider,i.extraCallable)
+						elif i.type == "choice":
+							
+							#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "choice",choicesOption=choices,default=defaultChoice,extraCallable=extraActivationCallable})
+							addCustomChoiceOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.choicesOption,i.default,i.extraCallable)
+							)
 			
 			if node.get_script().get_path() == "res://src/title/panel/endless.gd":
 				pass
