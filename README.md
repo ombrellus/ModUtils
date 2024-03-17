@@ -1,5 +1,5 @@
 # ModUtils
-General library for WindowKill modding (Current version 0.1.2)
+General library for WindowKill modding (Current version 0.2.0)
 
 GameBanana page: https://gamebanana.com/mods/500748
 
