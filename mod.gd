@@ -12,13 +12,16 @@ class modUtils extends Node:
 	var utilsname = "ommodutils"
 	
 	var customUpgrades:Dictionary = {}
+	var customCharAbility:Dictionary
 	var customOptions:Array[Dictionary] = []
 	var customBosses:Array[Dictionary] = []
 	var customBossQueue:Array[Dictionary] = []
 	var customEnemies:Array[Dictionary] = []
+	var customCharacters:Array[Dictionary] =[]
 	
 	var optionPage:Window
 	var gameScene:Node
+	var characterNum:int
 	
 	#region CUSTOM ENEMIES AND BOSSES
 	
@@ -71,6 +74,39 @@ class modUtils extends Node:
 			texture = load("res://modres/"+modName+ "/cursors/"+name+".png"),
 			center = _center
 		}
+	#endregion
+	
+	#region CUSTOM CHARACTERS
+	func AddCustomCharacter(modName:String,charName:String,data:Dictionary,ability:Dictionary):
+		data.spawnRate = load("res://modres/"+modName+"/characters/"+data.internalName+"/curve.tres")
+		var actual = {characterNum:{
+		internalName = data.internalName,
+		displayName = data.displayName,
+		ability = characterNum,
+		spawnRate = data.spawnRate,
+		wallShrinkSpeed = data.wallShrinkSpeed,
+		wallResistance = data.wallResistance,
+		priceScale = data.priceScale,
+		skins = data.skins,
+		mod = modName,
+		unlocked = true,
+		}}
+		var actualAbility={characterNum:{
+		internalName = ability.internalName,
+		name = ability.name,
+		icon = ability.icon,
+		priceType = 1,
+		value = ability.value,
+		price = ability.price,
+		buy = ability.buy,
+		description = ability.description,
+		weight = ability.weight,
+		mod = modName}
+	}
+		Players.charData.merge(actual)
+		customCharAbility.merge(actualAbility)
+		customCharacters.append({gameName =data.displayName,name = data.internalName,mod = modName,pos = characterNum})
+		characterNum+=1
 	#endregion
 	
 	#region CUSTOM OPTIONS
@@ -243,6 +279,7 @@ class modUtils extends Node:
 	signal enemySpawned
 	signal coinSpawned
 	signal bossSpawned
+	signal tokenSpawned
 	
 	signal enemyDied
 	signal bossDied
@@ -253,6 +290,7 @@ class modUtils extends Node:
 		var test = ProjectSettings.load_resource_pack(gumm.get_full_path("mod://pack.pck"))
 		get_tree().node_added.connect(on_new_node)
 		get_tree().node_removed.connect(on_kill_node)
+		characterNum = Players.Char.size()
 	
 	#region NEW NODE HANDLING
 	func on_new_node(node:Node):
@@ -267,24 +305,29 @@ class modUtils extends Node:
 					gameScene.bossQueue.insert(i.position,i.type)
 			)
 		if isShop(node):
-			onShop.emit(node)
+			node.abilityChoices.merge(customCharAbility)
 			node.ready.connect(func():
 				node.shopItemChoices.merge(customUpgrades))
+			onShop.emit(node)
 		if node.is_in_group("enemy"):
 			enemySpawned.emit(node)
-			print(node.get_node("Triangle").material)
+		if node.is_in_group("token"):
+			tokenSpawned.emit(node)
 		if node.is_in_group("boss_main"):
 			if gameScene.bossQueue.size() == 0:
 				gameScene.bossQueue = [
 					gameScene.BossSpike, gameScene.BossSnake, gameScene.BossSlime,
 					gameScene.BossSpike, gameScene.BossSnake, gameScene.BossSlime, gameScene.BossVirus,
 				]
+				if randf() < 0.33:
+					gameScene.bossQueue.append(gameScene.BossOrb)
 				for i in customBosses:
 					if i.weight == 1.0:
 						gameScene.bossQueue.append(i.type)
 					elif randf() < i.weight:
 						gameScene.bossQueue.append(i.type)
 				gameScene.bossQueue.shuffle()
+				bossQueueUpdated.emit(gameScene.bossQueue)
 			bossSpawned.emit(node)
 		if node.is_in_group("coin"):
 			coinSpawned.emit(node)
@@ -292,7 +335,6 @@ class modUtils extends Node:
 			if node.get_script().get_path() == "res://src/ui/options/options.gd":
 				onOptions.emit(node)
 				optionPage = node
-				print("im being called")
 				optionPage.ready.connect(func():for i in customOptions:
 					if i.type == "toggle":
 						#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
@@ -303,7 +345,23 @@ class modUtils extends Node:
 					elif i.type == "choice":
 						#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "choice",choicesOption=choices,default=defaultChoice,extraCallable=extraActivationCallable})
 						addCustomChoiceOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.choicesOption,i.default,i.extraCallable))
+			
+			if node.get_script().get_path() == "res://src/title/panel/endless.gd":
+				for c in customCharacters:
+					Players.unlockedCharList.append(c.pos)
+			if node.get_script().get_path() == "res://src/title/panel/character.gd":
+				for x in customCharacters:
+					if x.pos == Players.unlockedCharList[Global.title._charId]:
+						node.set_script(load("res://modres/ommodutils/custom_character_select.gd"))
+						node.charName = x.name
+						node.mod = x.mod
+						node.charVisualName = x.gameName
+			if node.get_script().get_path() == "res://src/player/player.gd":
+				for x in customCharacters:
+					if x.pos == Players.details[0].char:
+						node.behavior = Utils.spawn(load("res://modres/"+Players.details[0].charMod+"/characters/"+Players.details[0].charInt+"/"+Players.details[0].charInt+".scn"), Vector2.ZERO, node)
 	#endregion
+
 	
 	func on_kill_node(node:Node):
 		if node.is_in_group("enemy"):
@@ -314,7 +372,7 @@ class modUtils extends Node:
 	
 	#region DEBUG
 	func _debugWindow():
-		var debugWin = addGameWindow("debug",100,Vector2(300,300),get_tree().current_scene,false,true)
+		var debugWin = addGameWindow("debug",100,Vector2(300,300),get_tree().current_scene,true,true)
 		var cont = Control.new()
 		cont.layout_direction =Control.LAYOUT_DIRECTION_LTR
 		cont.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -327,13 +385,17 @@ class modUtils extends Node:
 		holder.size = Vector2(300,300)
 		holder.mouse_filter=Control.MOUSE_FILTER_PASS
 		cont.add_child(holder)
+		createDebugButton(holder,"Spawn next boss",func():
+			gameScene.spawnBoss())
+		createDebugButton(holder,"Spawn token",func():
+			Utils.spawn(preload("res://src/element/power_token/powerToken.tscn"),Vector2(0,0),Global.main.coin_area))
+	
+	func createDebugButton(cont:VBoxContainer,name:String,call:Callable):
 		var uselessText = Label.new()
-		uselessText.text = "Spawn next boss"
-		holder.add_child(uselessText)
+		uselessText.text = name
+		cont.add_child(uselessText)
 		var butt = Button.new()
-		butt.text = "Debuggg"
-		butt.button_down.connect(func():
-			Global.main.spawnBoss())
-		holder.add_child(butt)
-		
+		butt.text = name
+		butt.button_down.connect(call)
+		cont.add_child(butt)
 	#endregion
