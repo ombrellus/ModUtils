@@ -77,7 +77,7 @@ class modUtils extends Node:
 	#endregion
 	
 	#region CUSTOM CHARACTERS
-	func AddCustomCharacter(modName:String,charName:String,data:Dictionary,ability:Dictionary):
+	func AddCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 		data.spawnRate = load("res://modres/"+modName+"/characters/"+data.internalName+"/curve.tres")
 		var actual = {characterNum:{
 		internalName = data.internalName,
@@ -105,7 +105,9 @@ class modUtils extends Node:
 	}
 		Players.charData.merge(actual)
 		customCharAbility.merge(actualAbility)
-		customCharacters.append({gameName =data.displayName,name = data.internalName,mod = modName,pos = characterNum})
+		print("if i am called twice this is bad")
+		customCharacters.append({gameName =data.displayName,name = data.internalName,mod = modName,pos = characterNum,img = data.spritesExtension})
+		Players.unlockedCharList.append(characterNum)
 		characterNum+=1
 	#endregion
 	
@@ -223,7 +225,7 @@ class modUtils extends Node:
 	#endregion
 	
 	#region CUSTOM WINDOWS
-	func addGameWindow(name:String,rad:int,size:Vector2,parent:Node,camera:bool=true,onTop:bool=true) -> Window:
+	func addGameWindow(name:String,rad:int,size:Vector2,parent:Node = Global.gameArea,camera:bool=true,onTop:bool=true) -> Window:
 		#var widnow:Window = Window.new()
 		#widnow.size = size
 		#widnow.position = pos - widnow.size/2
@@ -249,7 +251,7 @@ class modUtils extends Node:
 		Game.registerWindow(window, name)
 		return window
 	
-	static func addTitleWindow(name:StringName,pos:Vector2i,buttonArgs={"has"=false,"name"="button"}) -> Dictionary:
+	static func addTitleWindow(name:String,pos:Vector2i,buttonArgs={"has"=false,"name"="button"}) -> Dictionary:
 		var win = Global.title.addWindow(Vector2.INF, preload("res://src/title/panel/blank.tscn"), {name = name})
 		if buttonArgs["has"] == true:
 			var cont:Control = Control.new()
@@ -347,8 +349,7 @@ class modUtils extends Node:
 						addCustomChoiceOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.choicesOption,i.default,i.extraCallable))
 			
 			if node.get_script().get_path() == "res://src/title/panel/endless.gd":
-				for c in customCharacters:
-					Players.unlockedCharList.append(c.pos)
+				pass
 			if node.get_script().get_path() == "res://src/title/panel/character.gd":
 				for x in customCharacters:
 					if x.pos == Players.unlockedCharList[Global.title._charId]:
@@ -356,6 +357,7 @@ class modUtils extends Node:
 						node.charName = x.name
 						node.mod = x.mod
 						node.charVisualName = x.gameName
+						node.ext = x.img
 			if node.get_script().get_path() == "res://src/player/player.gd":
 				for x in customCharacters:
 					if x.pos == Players.details[0].char:
@@ -372,7 +374,7 @@ class modUtils extends Node:
 	
 	#region DEBUG
 	func _debugWindow():
-		var debugWin = addGameWindow("debug",100,Vector2(300,300),get_tree().current_scene,true,true)
+		var debugWin = addGameWindow("debug",100,Vector2(300,300))
 		var cont = Control.new()
 		cont.layout_direction =Control.LAYOUT_DIRECTION_LTR
 		cont.set_anchors_preset(Control.PRESET_FULL_RECT)
