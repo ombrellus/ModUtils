@@ -322,6 +322,9 @@ class modUtils extends Node:
 	signal enemyDied
 	signal bossDied
 	
+	signal itemBought
+	signal upgradeBought
+	
 	signal bossQueueUpdated
 	
 	func _ready():
@@ -370,54 +373,74 @@ class modUtils extends Node:
 		if node.is_in_group("coin"):
 			coinSpawned.emit(node)
 		if node.get_script() != null:
-			if node.get_script().get_path() == "res://src/ui/options/options.gd":
-				onOptions.emit(node)
-				optionPage = node
-				optionPage.ready.connect(func():
-					for i in customTabs:
-						addCustomOptionTabDirect(i)
-					for i in customOptions:
-						if i.type == "toggle":
-							
-							#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
-							addCustomToggleOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.enabled,i.extraCallable)
-						elif i.type == "slider":
-							
-							#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "slider",slider=sliderSettings,extraCallable=extraActivationCallable})
-							addCustomSliderOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.slider,i.extraCallable)
-						elif i.type == "choice":
-							
-							#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "choice",choicesOption=choices,default=defaultChoice,extraCallable=extraActivationCallable})
-							addCustomChoiceOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.choicesOption,i.default,i.extraCallable)
-							)
-			
-			if node.get_script().get_path() == "res://src/title/panel/endless.gd":
-				pass
-			if node.get_script().get_path() == "res://src/title/panel/character.gd":
-				for x in customCharacters:
-					if x.pos == Players.unlockedCharList[Global.title._charId]:
-						node.set_script(load("res://modres/ommodutils/custom_character_select.gd"))
-						node.charName = x.name
-						node.mod = x.mod
-						node.charVisualName = x.gameName
-						node.ext = x.img
-			if node.get_script().get_path() == "res://src/player/player.gd":
-				for x in customCharacters:
-					if x.pos == Players.details[0].char:
-						node.behavior = Utils.spawn(load("res://modres/"+Players.details[0].charMod+"/characters/"+Players.details[0].charInt+"/"+Players.details[0].charInt+".scn"), Vector2.ZERO, node)
-	#endregion
-
+			match node.get_script().get_path():
+				"res://src/ui/options/options.gd":
+					onOptions.emit(node)
+					optionPage = node
+					optionPage.ready.connect(func():
+						for i in customTabs:
+							addCustomOptionTabDirect(i)
+						for i in customOptions:
+							if i.type == "toggle":
+								
+								#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
+								addCustomToggleOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.enabled,i.extraCallable)
+							elif i.type == "slider":
+								
+								#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "slider",slider=sliderSettings,extraCallable=extraActivationCallable})
+								addCustomSliderOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.slider,i.extraCallable)
+							elif i.type == "choice":
+								
+								#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "choice",choicesOption=choices,default=defaultChoice,extraCallable=extraActivationCallable})
+								addCustomChoiceOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.choicesOption,i.default,i.extraCallable)
+								)
+				"res://src/title/panel/endless.gd":
+					pass
+				"res://src/title/panel/character.gd":
+					for x in customCharacters:
+						if x.pos == Players.unlockedCharList[Global.title._charId]:
+							node.set_script(load("res://modres/ommodutils/custom_character_select.gd"))
+							node.charName = x.name
+							node.mod = x.mod
+							node.charVisualName = x.gameName
+							node.ext = x.img
+				"res://src/player/player.gd":
+					for x in customCharacters:
+						if x.pos == Players.details[0].char:
+							node.behavior = Utils.spawn(load("res://modres/"+Players.details[0].charMod+"/characters/"+Players.details[0].charInt+"/"+Players.details[0].charInt+".scn"), Vector2.ZERO, node)
+				"res://src/ui/upgrade_shop/upgradeShopItem.gd":
+					node.tree_exiting.connect(func():
+						if node.bought:
+							upgradeBought.emit(node.entry)
+						)
+				"res://src/ui/shop/shopItem.gd":
+					node.tree_exiting.connect(func():
+						if node.bought:
+							match node.entry.priceType:
+								0:
+									itemBought.emit(node.entry)
+								1:
+									upgradeBought.emit(node.entry)
+						)
+	
+	
 	
 	func on_kill_node(node:Node):
 		if node.is_in_group("enemy"):
 			enemyDied.emit(node)
 		if node.is_in_group("boss_main"):
 			bossDied.emit(node)
+		if node.get_script() != null:
+			match node.get_script().get_path():
+				_:
+					pass
 	
+	
+	#endregion
 	
 	#region DEBUG
 	func _debugWindow():
-		var debugWin = addGameWindow("debug",100,Vector2(300,300))
+		var debugWin = addGameWindow("debug",100,Vector2(300,300),gameScene.game_area,false,true)
 		var cont = Control.new()
 		cont.layout_direction =Control.LAYOUT_DIRECTION_LTR
 		cont.set_anchors_preset(Control.PRESET_FULL_RECT)
