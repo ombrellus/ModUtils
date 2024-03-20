@@ -313,6 +313,7 @@ class modUtils extends Node:
 	signal onMain
 	signal onShop
 	signal onOptions
+	signal onEscape
 	
 	signal enemySpawned
 	signal coinSpawned
@@ -422,19 +423,17 @@ class modUtils extends Node:
 								1:
 									upgradeBought.emit(node.entry)
 						)
-	
+				"res://src/ui/escape.gd":
+					onEscape.emit()
 	
 	
 	func on_kill_node(node:Node):
 		if node.is_in_group("enemy"):
-			enemyDied.emit(node)
+			if node.enemy.health <= 0:
+				enemyDied.emit(node)
 		if node.is_in_group("boss_main"):
-			bossDied.emit(node)
-		if node.get_script() != null:
-			match node.get_script().get_path():
-				_:
-					pass
-	
+			if node.enemy.health <= 0:
+				enemyDied.emit(node)
 	
 	#endregion
 	
