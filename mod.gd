@@ -120,10 +120,10 @@ class modUtils extends Node:
 	#controls (kinda)
 	#multiplayer
 	#unlocks (kinda)
-	func addCustomToggleOption(modName:String,optionMenuName:String,page:String, optionInternal:String,startsEnabled:bool=false, extraActivationCallable:Callable=func(val):pass):
-		customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
+	func addCustomToggleOption(modName:String,optionMenuName:String,page:String, optionInternal:String,startsEnabled:bool=false,tip:String=".", extraActivationCallable:Callable=func(val):pass):
+		customOptions.append({mod = modName,tooltip=tip,optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
 	
-	func addCustomToggleOptionDirectToMenu(modName:String,optionMenuName:String,page:String, optionInternal:String,startsEnabled:bool=false, extraActivationCallable:Callable=func(val):pass):
+	func addCustomToggleOptionDirectToMenu(modName:String,optionMenuName:String,page:String, optionInternal:String,startsEnabled:bool=false,tip:String=".", extraActivationCallable:Callable=func(val):pass):
 		#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
 		var option_class = load("res://src/ui/options/option.gd")
 		var option_list
@@ -133,7 +133,10 @@ class modUtils extends Node:
 				option_list = s
 		var option = load("res://src/ui/options/option.tscn").instantiate()
 		option.type = option_class.Type.toggle
-		option.tooltip = modName
+		if tip == ".":
+			option.tooltip = modName
+		else:
+			option.tooltip = tip
 		option.text = optionMenuName
 		option.option = optionInternal
 		
@@ -151,10 +154,10 @@ class modUtils extends Node:
 		toggle.toggled.connect(extraActivationCallable)
 		option_list.get_child(0).add_child.call_deferred(option)
 	
-	func addCustomSliderOption(modName:String,optionMenuName:String,page:String, optionInternal:String,sliderSettings:Vector4= Vector4(0,50,25,1), extraActivationCallable:Callable=func(val):pass):
-		customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "slider",slider=sliderSettings,extraCallable=extraActivationCallable})
+	func addCustomSliderOption(modName:String,optionMenuName:String,page:String, optionInternal:String,sliderSettings:Vector4= Vector4(0,50,25,1),tip:String=".",extraActivationCallable:Callable=func(val):pass):
+		customOptions.append({mod = modName,tooltip=tip, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "slider",slider=sliderSettings,extraCallable=extraActivationCallable})
 	
-	func addCustomSliderOptionDirectToMenu(modName:String,optionMenuName:String,page:String, optionInternal:String,sliderSettings:Vector4 = Vector4(0,50,25,1), extraActivationCallable:Callable=func(val):pass):
+	func addCustomSliderOptionDirectToMenu(modName:String,optionMenuName:String,page:String, optionInternal:String,sliderSettings:Vector4 = Vector4(0,50,25,1),tip:String="." ,extraActivationCallable:Callable=func(val):pass):
 		#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
 		var option_class = load("res://src/ui/options/option.gd")
 		var option_list
@@ -164,7 +167,10 @@ class modUtils extends Node:
 				option_list = s
 		var option = load("res://src/ui/options/option.tscn").instantiate()
 		option.type = option_class.Type.slider
-		option.tooltip = modName
+		if tip == ".":
+			option.tooltip = modName
+		else:
+			option.tooltip = tip
 		option.text = optionMenuName
 		option.option = optionInternal
 		
@@ -184,10 +190,10 @@ class modUtils extends Node:
 		slider.value_changed.connect(extraActivationCallable)
 		option_list.get_child(0).add_child.call_deferred(option)
 	
-	func addCustomChoiceOption(modName:String,optionMenuName:String,page:String, optionInternal:String,choices:Dictionary, defaultChoice:String,extraActivationCallable:Callable=func(val):pass):
-		customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "choice",choicesOption=choices,default=defaultChoice,extraCallable=extraActivationCallable})
+	func addCustomChoiceOption(modName:String,optionMenuName:String,page:String, optionInternal:String,choices:Dictionary, defaultChoice:String,tip:String=".",extraActivationCallable:Callable=func(val):pass):
+		customOptions.append({mod = modName,tooltip=tip, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "choice",choicesOption=choices,default=defaultChoice,extraCallable=extraActivationCallable})
 	
-	func addCustomChoiceOptionDirectToMenu(modName:String,optionMenuName:String,page:String, optionInternal:String,choices:Dictionary, defaultChoice:String,extraActivationCallable:Callable=func(val):pass):
+	func addCustomChoiceOptionDirectToMenu(modName:String,optionMenuName:String,page:String, optionInternal:String,choices:Dictionary, defaultChoice:String,tip:String=".",extraActivationCallable:Callable=func(val):pass):
 		#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
 		var option_class = load("res://src/ui/options/option.gd")
 		var option_list
@@ -197,7 +203,10 @@ class modUtils extends Node:
 				option_list = s
 		var option = load("res://src/ui/options/option.tscn").instantiate()
 		option.type = option_class.Type.choice
-		option.tooltip = modName
+		if tip == ".":
+			option.tooltip = modName
+		else:
+			option.tooltip = tip
 		option.text = optionMenuName
 		option.option = optionInternal
 		
@@ -333,6 +342,7 @@ class modUtils extends Node:
 		get_tree().node_added.connect(on_new_node)
 		get_tree().node_removed.connect(on_kill_node)
 		characterNum = Players.Char.size()
+		addCustomToggleOption(utilsname,"In-game debug menu","general","OMmod_utils_debug_menu",false,"Opens debug menu when in game",func(val):pass)
 	
 	#region NEW NODE HANDLING
 	func on_new_node(node:Node):
@@ -345,6 +355,8 @@ class modUtils extends Node:
 				node.enemySelection += customEnemies
 				for i in customBossQueue:
 					gameScene.bossQueue.insert(i.position,i.type)
+				if Global.options["OMmod_utils_debug_menu"]:
+					_debugWindow()
 			)
 		if isShop(node):
 			node.abilityChoices.merge(customCharAbility)
@@ -385,15 +397,15 @@ class modUtils extends Node:
 							if i.type == "toggle":
 								
 								#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "toggle",enabled=startsEnabled,extraCallable=extraActivationCallable})
-								addCustomToggleOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.enabled,i.extraCallable)
+								addCustomToggleOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.enabled,i.tooltip,i.extraCallable)
 							elif i.type == "slider":
 								
 								#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "slider",slider=sliderSettings,extraCallable=extraActivationCallable})
-								addCustomSliderOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.slider,i.extraCallable)
+								addCustomSliderOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.slider,i.tooltip,i.extraCallable)
 							elif i.type == "choice":
 								
 								#customOptions.append({mod = modName, optionName = optionMenuName,menuPage = page,option = optionInternal, type = "choice",choicesOption=choices,default=defaultChoice,extraCallable=extraActivationCallable})
-								addCustomChoiceOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.choicesOption,i.default,i.extraCallable)
+								addCustomChoiceOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.choicesOption,i.default,i.tooltip,i.extraCallable)
 								)
 				"res://src/title/panel/endless.gd":
 					pass
