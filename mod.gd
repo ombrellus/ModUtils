@@ -24,6 +24,8 @@ class modUtils extends Node:
 	var gameScene:Node
 	var characterNum:int
 	
+	var oldBossesKilled = 0
+	
 	#region CUSTOM ENEMIES AND BOSSES
 	
 	func addEnemyToPool(modName:String,name:String,_weigth:float):
@@ -349,6 +351,7 @@ class modUtils extends Node:
 		if isTitle(node):
 			onTitle.emit(node)
 		if isMain(node):
+			oldBossesKilled = 0
 			onMain.emit(node)
 			gameScene = node
 			node.ready.connect(func():
@@ -443,9 +446,11 @@ class modUtils extends Node:
 		if node.is_in_group("enemy"):
 			if node.enemy.health <= 0:
 				enemyDied.emit(node)
-		if node.is_in_group("boss_main"):
+		if node.is_in_group("boss_main") || Stats.stats.totalBossesKilled > oldBossesKilled:
 			if node.enemy.health <= 0:
-				enemyDied.emit(node)
+				bossDied.emit(node)
+				if Stats.stats.totalBossesKilled > oldBossesKilled:
+					oldBossesKilled = Stats.stats.totalBossesKilled
 	
 	#endregion
 	
@@ -466,8 +471,12 @@ class modUtils extends Node:
 		cont.add_child(holder)
 		createDebugButton(holder,"Spawn next boss",func():
 			gameScene.spawnBoss())
+		createDebugButton(holder,"Give 1k coins",func():
+			Global.coins = Global.coins + 1000)
+		createDebugButton(holder,"Give 10k coins",func():
+			Global.coins = Global.coins + 10000)
 		createDebugButton(holder,"Spawn token",func():
-			Utils.spawn(preload("res://src/element/power_token/powerToken.tscn"),Vector2(0,0),Global.main.coin_area))
+			Utils.spawn(preload("res://src/element/power_token/powerToken.tscn"),Vector2(Global.player.global_position.y,Global.player.global_position.x),Global.main.coin_area))
 	
 	func createDebugButton(cont:VBoxContainer,name:String,call:Callable):
 		var uselessText = Label.new()
