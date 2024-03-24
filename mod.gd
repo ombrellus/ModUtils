@@ -12,19 +12,30 @@ class modUtils extends Node:
 	var utilsname = "ommodutils"
 	
 	var customUpgrades:Dictionary = {}
-	var customCharAbility:Dictionary
+	var customCharAbility:Dictionary = {}
 	var customOptions:Array[Dictionary] = []
 	var customBosses:Array[Dictionary] = []
 	var customBossQueue:Array[Dictionary] = []
 	var customEnemies:Array[Dictionary] = []
 	var customCharacters:Array[Dictionary] =[]
+	var customGamemodes:Array[Dictionary]
 	var customTabs:Array[String] =[]
+	
+	var selectedGamemode:String = "none"
+	var gamemodeMod:String = "none"
+	var gaymodeCall:Callable = func():pass
+	var customGamemodeArgs:Dictionary = {timer=0.0,enemy=true,boss=true}
+	
+	var selectingGamemode:int = 0
 	
 	var optionPage:Window
 	var gameScene:Node
+	var gameUi:Control
 	var characterNum:int
 	
 	var oldBossesKilled = 0
+	var oldEnemiesKilled = 0
+	var restarting:bool = false
 	
 	#region CUSTOM ENEMIES AND BOSSES
 	
@@ -79,8 +90,13 @@ class modUtils extends Node:
 		}
 	#endregion
 	
+	#region CUSTOM GAMEMODES
+	func addCustomGamemode(modName:String,modeName:String,spawnEnemy:bool = true,spawnBosses:bool = true,timed:float=0.0,extraReadyCall:Callable=func():pass):
+		customGamemodes.append({mod=modName,name=modeName,call=extraReadyCall,enemy=spawnEnemy,boss=spawnBosses,timer=timed})
+	#endregion
+	
 	#region CUSTOM CHARACTERS
-	func AddCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
+	func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 		data.spawnRate = load("res://modres/"+modName+"/characters/"+data.internalName+"/curve.tres")
 		var actual = {characterNum:{
 		internalName = data.internalName,
@@ -252,6 +268,12 @@ class modUtils extends Node:
 	#endregion
 		
 	#region CHECKS
+	
+	func checkCustomGamemode(modName:String,gamemode:String)->bool:
+		if gamemodeMod == modName and gamemode == selectedGamemode:
+			return true
+		return false
+	
 	static func isTitle(node:Node) -> bool:
 		if node.get_script() != null:
 			if node.get_script().get_path() == "res://src/title/title.gd":
@@ -349,17 +371,32 @@ class modUtils extends Node:
 	#region NEW NODE HANDLING
 	func on_new_node(node:Node):
 		if isTitle(node):
+			restarting =false
+			selectedGamemode= "none"
+			gamemodeMod= "none"
+			gaymodeCall= func():pass
+			customGamemodeArgs = {timer=0.0,enemy=true,boss=true}
 			onTitle.emit(node)
 		if isMain(node):
 			oldBossesKilled = 0
-			onMain.emit(node)
+			oldEnemiesKilled = 0
 			gameScene = node
+			restarting =false
+			onMain.emit(node)
 			node.ready.connect(func():
+				if customGamemodeArgs.timer != 0.0:
+					Global.timedModeLimit = 60.0* customGamemodeArgs.timer
+				else:
+					Global.timedModeLimit = 60.0*20.0
 				node.enemySelection += customEnemies
 				for i in customBossQueue:
 					gameScene.bossQueue.insert(i.position,i.type)
 				if Global.options["OMmod_utils_debug_menu"]:
 					_debugWindow()
+				gameUi = node.game_ui
+				node.game_ui.tree_exiting.connect(func():
+					restarting = true)
+				gaymodeCall.call()
 			)
 		if isShop(node):
 			node.abilityChoices.merge(customCharAbility)
@@ -411,7 +448,61 @@ class modUtils extends Node:
 								addCustomChoiceOptionDirectToMenu(i.mod,i.optionName,i.menuPage,i.option,i.choicesOption,i.default,i.tooltip,i.extraCallable)
 								)
 				"res://src/title/panel/endless.gd":
-					pass
+					node.ready.connect(func():
+						node.button.click.connect(func():
+							Global.timedModeLimit = 60.0 * 20.0
+							selectedGamemode= "none"
+							gamemodeMod="none"
+							gaymodeCall = func():pass
+							customGamemodeArgs = {timer=0.0,enemy=true,boss=true}
+						)
+					)
+				"res://src/title/panel/timed.gd":
+					node.ready.connect(func():
+						node.button.click.connect(func():
+							Global.timedModeLimit = 60.0 * 20.0
+							selectedGamemode= "none"
+							gamemodeMod="none"
+							gaymodeCall = func():pass
+							customGamemodeArgs = {timer=0.0,enemy=true,boss=true}
+						)
+					)
+				"res://src/title/panel/newRun.gd":
+					node.ready.connect(func():
+						var games:Array[PackedScene]
+						for i in node.button.click.get_connections():
+							node.button.click.disconnect(i.callable)
+						for i in customGamemodes:
+							games.append(load("res://modres/ommodutils/gamemode.scn"))
+						node.button.click.connect(func():
+							selectingGamemode = 0
+							Global.title.switch(self)
+							Global.title.split(node, [preload("res://src/title/panel/timed.tscn"),preload("res://src/title/panel/endless.tscn")]+games)
+						)
+						print(node.button.click.get_connections())
+					)
+				"res://modres/ommodutils/gamemode.gd":
+					print("im alive")
+					node.ready.connect(func():
+						var curMode = customGamemodes[selectingGamemode]
+						print(curMode)
+						selectingGamemode+=1
+						node.gamemode = curMode
+						node.button.text = node.gamemode.name
+						node.button.update()
+						node.button.click.connect(func():
+							if node.gamemode.timer != 0.0:
+								Players.timedMode = true
+								Global.timedModeLimit = 60.0 * node.gamemode.timer
+							else:
+								Players.timedMode = false
+								Global.timedModeLimit = 60.0 * 20.0
+							selectedGamemode= node.gamemode.name
+							gamemodeMod=node.gamemode.mod
+							gaymodeCall = node.gamemode.call
+							customGamemodeArgs = {timer=node.gamemode.timer,enemy=node.gamemode.enemy,boss=node.gamemode.boss}
+							)
+					)
 				"res://src/title/panel/character.gd":
 					for x in customCharacters:
 						if x.pos == Players.unlockedCharList[Global.title._charId]:
@@ -440,17 +531,27 @@ class modUtils extends Node:
 						)
 				"res://src/ui/escape.gd":
 					onEscape.emit()
+				"res://src/ui/closeConfirm.gd":
+					node.quit.click.connect(func():
+						restarting = true
+						print("dead"))
 	
+	func _process(delta):
+		if gameScene !=null:
+			if not customGamemodeArgs.enemy:
+				gameScene.spawnTimer = 10
+			if not customGamemodeArgs.boss:
+				gameScene.bossTimer = 10
 	
 	func on_kill_node(node:Node):
 		if node.is_in_group("enemy"):
-			if node.enemy.health <= 0:
+			if Stats.stats.totalEnemiesKilled > oldEnemiesKilled:
 				enemyDied.emit(node)
-		if node.is_in_group("boss_main") || Stats.stats.totalBossesKilled > oldBossesKilled:
-			if node.enemy.health <= 0:
+				oldEnemiesKilled = Stats.stats.totalEnemiesKilled
+		if node.is_in_group("boss_main"):
+			if Stats.stats.totalBossesKilled > oldBossesKilled:
+				oldBossesKilled = Stats.stats.totalBossesKilled
 				bossDied.emit(node)
-				if Stats.stats.totalBossesKilled > oldBossesKilled:
-					oldBossesKilled = Stats.stats.totalBossesKilled
 	
 	#endregion
 	
@@ -476,7 +577,8 @@ class modUtils extends Node:
 		createDebugButton(holder,"Give 10k coins",func():
 			Global.coins = Global.coins + 10000)
 		createDebugButton(holder,"Spawn token",func():
-			Utils.spawn(preload("res://src/element/power_token/powerToken.tscn"),Vector2(Global.player.global_position.y,Global.player.global_position.x),Global.main.coin_area))
+			Utils.spawn(preload("res://src/element/power_token/powerToken.tscn"),Vector2(Global.player.global_position.x,Global.player.global_position.y),Global.main.coin_area))
+			
 	
 	func createDebugButton(cont:VBoxContainer,name:String,call:Callable):
 		var uselessText = Label.new()
