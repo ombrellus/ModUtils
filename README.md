@@ -1,5 +1,5 @@
 # ModUtils
-General library for WindowKill modding (wkmu version 1)
+General library for WindowKill modding (wkmu version 2)
 
 GameBanana page: https://gamebanana.com/mods/500748
 
