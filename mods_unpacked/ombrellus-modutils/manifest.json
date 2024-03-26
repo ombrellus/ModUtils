@@ -1,6 +1,6 @@
 {
-	"name": "nametag",
-	"namespace": "torcado",
+	"name": "modutils",
+	"namespace": "ombrellus",
 	"version_number": "1.0.0",
 	"description": "mod utils!!",
 	"website_url": "",
