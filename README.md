@@ -1,5 +1,5 @@
 # ModUtils
-General library for WindowKill modding (wkmu version 3)
+General library for WindowKill modding (wkmu version 4)
 
 GameBanana page: https://gamebanana.com/mods/500748
 
@@ -20,8 +20,7 @@ This is a multifunction content mod library for WindowKill, that allows modders 
 - Add custom enemies
 - Add custom bosses 
 - Add custom upgrades 
-- Add custom options and tabs (not ported)
-- Add custom characters (not ported)
+- Add custom characters 
 - Add custom gamemodes (not ported)
 - Easily generating windows in game/title 
-- Connect to various new signals (not all ported)
+- Connect to various new signals
