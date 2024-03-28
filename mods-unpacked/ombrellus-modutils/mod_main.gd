@@ -10,14 +10,73 @@ var translations_dir_path := ""
 signal enemyHit
 signal onMain
 signal bossSpawned
+signal enemySpawned
+signal bossDied
+signal enemyDied
+signal itemBought
+signal upgradeBought
 signal bossQueueUpdated
 
 var customUpgrades:Dictionary = {}
+var customCharAbility:Dictionary = {}
 
 var customEnemies:Array[Dictionary] = []
 var customBosses:Array[Dictionary] = []
 var customBossQueue:Array[Dictionary] = []
+var customCharacters:Array[Dictionary] =[]
 
+var characterNum:int
+var allCharacterNum:int
+var coolAbility:int = 0
+var oldBossesKilled:int = 0
+var oldEnemiesKilled:int = 0
+
+
+var myCharacter:Dictionary ={
+		internalName = "archer",
+		displayName = "belloCacco",
+		ability = 2,
+		wallShrinkSpeed = 1.0,
+		wallResistance = 1.0,
+		priceScale = 1.0,
+		skins = [""],
+		spritesExtension = ".png",
+		unlocked = true,
+	}
+var charAbility:Dictionary={
+		internalName = "cool",
+		name = (func()->Array:
+			return ["cool"]
+			),
+		icon = (func()->Array:
+			return [preload("res://src/ui/upgrade_shop/halt.svg")]
+			),
+		priceType = 1,
+		value = (func():
+			return coolAbility
+			),
+		price = (func(): 
+			return (coolAbility+1)
+			),
+		buy = (func():
+			coolAbility += 1
+			Global.abilityCount += 1
+			Global.usableAbilityCount += 1
+			print("too lazy to remove those")
+			print(coolAbility)
+			),
+		description = (func():
+			var list = [
+				"piss",
+				"idk",
+				"you tell me"
+			]
+			if coolAbility < list.size():
+				return list[coolAbility]
+			return ""
+			),
+		weight = 1.0
+	}
 var testItem:Dictionary = {piss = {
 		internalName = "piss",
 		name = (func()->Array: return ["piss"]
@@ -46,24 +105,37 @@ var testItem:Dictionary = {piss = {
 func _init() -> void:
 	mod_dir_path = ModLoaderMod.get_unpacked_dir().path_join(AUTHORNAME_MODNAME_DIR)
 	# Add extensions
-	
+	extensions_dir_path = mod_dir_path.path_join("extensions")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/title/panel/character.gd")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/stats/recordStats.gd")
 
 func install_script_extensions() -> void:
-	extensions_dir_path = mod_dir_path.path_join("extensions")
 	
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/enemy/enemy.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/shop/shop.gd")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/shop/shopItem.gd")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/upgrade_shop/upgradeShopItem.gd")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/player/player.gd")
 
+func _on_current_config_changed(config: ModConfig) -> void:
+	# Check if the config of your mod has changed!
+	if config.mod_id == AUTHORNAME_MODNAME_DIR:
+		if Global.main != null and config.data.debug:
+			_debugWindow()
 
 func _ready() -> void:
 	install_script_extensions()
+	ModLoader.current_config_changed.connect(_on_current_config_changed)
 	ModLoaderLog.info("Ready!", AUTHORNAME_MODNAME_LOG_NAME)
+	allCharacterNum= Players.charList.front() + 1
+	characterNum = Players.Char.size()
 	addEnemyToPool(AUTHORNAME_MODNAME_DIR,"star_shooter",0.9)
 	addBossToQueue(AUTHORNAME_MODNAME_DIR,"starco",1)
 	addBossToPool(AUTHORNAME_MODNAME_DIR,"starco",1.0,2)
-	addUpgradesToPool(AUTHORNAME_MODNAME_DIR,testItem)
+	addItemsToPool(AUTHORNAME_MODNAME_DIR,testItem)
+	addCustomCharacter(AUTHORNAME_MODNAME_DIR,myCharacter,charAbility)
 	get_tree().node_added.connect(onNewNode)
-	enemyHit.connect(func(a,b):print("hitt"))
+	get_tree().node_removed.connect(onNoMoreNode)
 
 func _disable():
 	pass
@@ -87,17 +159,32 @@ func onNewNode(node):
 			Global.main.bossQueue.shuffle()
 			bossQueueUpdated.emit(Global.main.bossQueue)
 		bossSpawned.emit(node)
-	
+	elif node.is_in_group("enemy"):
+		enemySpawned.emit(node)
 	if node.get_script() != null:
 		match node.get_script().get_path():
 			"res://src/main/main.gd":
+				var config = ModLoaderConfig.get_current_config(AUTHORNAME_MODNAME_DIR)
+				oldBossesKilled = 0
+				oldEnemiesKilled = 0
 				onMain.emit(node)
 				node.ready.connect(func():
 					node.enemySelection += customEnemies
 					for i in customBossQueue:
 						node.bossQueue.insert(i.position,i.type)
-					_debugWindow()
+					if config.data.debug:
+						_debugWindow()
 				)
+
+func onNoMoreNode(node):
+	if node.is_in_group("enemy"):
+		if Stats.stats.totalEnemiesKilled > oldEnemiesKilled:
+			enemyDied.emit(node)
+			oldEnemiesKilled = Stats.stats.totalEnemiesKilled
+	if node.is_in_group("boss_main"):
+		if Stats.stats.totalBossesKilled > oldBossesKilled:
+			oldBossesKilled = Stats.stats.totalBossesKilled
+			bossDied.emit(node)
 #endregion
 
 #region ENEMIES AND BOSSES
@@ -130,15 +217,59 @@ func addBossToQueue(modName:String,name:String,pos:int):
 #endregion
 
 #region CUSTOM UPGRADES
-func resetModUpgrades(modName:String):
+func resetModItems(modName:String):
 	for i in customUpgrades.keys():
 		if customUpgrades[i].mod == modName:
 			customUpgrades.erase(i)
 
-func addUpgradesToPool(modName:String,upgrades:Dictionary):
+func addItemsToPool(modName:String,upgrades:Dictionary):
 	for i in upgrades.keys():
 		upgrades[i].mod = modName
 	customUpgrades.merge(upgrades)
+#endregion
+
+#region CUSTOM CHARACTERS
+func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
+	data.spawnRate = load("res://mods-unpacked/"+modName+"/extensions/src/character/"+data.internalName+"/curve.tres")
+	var actual = {characterNum:{
+	internalName = data.internalName,
+	displayName = data.displayName,
+	ability = characterNum,
+	spawnRate = data.spawnRate,
+	wallShrinkSpeed = data.wallShrinkSpeed,
+	wallResistance = data.wallResistance,
+	priceScale = data.priceScale,
+	skins = data.skins,
+	mod = modName,
+	unlocked = true,
+	}}
+	var actualAbility={characterNum:{
+	internalName = ability.internalName,
+	name = ability.name,
+	icon = ability.icon,
+	priceType = 1,
+	value = ability.value,
+	price = ability.price,
+	buy = ability.buy,
+	description = ability.description,
+	weight = ability.weight,
+	mod = modName}
+	}
+	Players.charData.merge(actual)
+	customCharAbility.merge(actualAbility)
+	customCharacters.append({gameName =data.displayName,name = data.internalName,mod = modName,pos = characterNum,img = data.spritesExtension})
+	Players.unlockedCharList.append(characterNum)
+	Players.charList.append(characterNum)
+	Players.charNames.merge({
+		characterNum : data.internalName
+	})
+	Players.charDisplayNames.merge({
+		characterNum : data.displayName
+	})
+	print(Players.charList)
+	print(Players.unlockedCharList)
+	print(characterNum)
+	characterNum+=1
 #endregion
 
 #region CUSTOM WINDOWS

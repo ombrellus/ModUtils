@@ -1,14 +1,14 @@
 {
-	"name": "modutils",
-	"namespace": "ombrellus",
+	"name": "nametag",
+	"namespace": "torcado",
 	"version_number": "1.0.0",
-	"description": "mod utils!!",
+	"description": "example mod, adds a nametag to the player",
 	"website_url": "",
 	"dependencies": [],
 	"extra": {
 		"godot": {
-			"authors": ["ombrellus"],
-			"tags": ["test"],
+			"authors": ["torcado"],
+			"tags": ["example"],
 			"description_rich": "",
 			"optional_dependencies": [],
 			"load_before": [],
@@ -21,10 +21,11 @@
 				"description": "Config",
 				"type": "object",
 				"properties": {
-					"debug": {
-						"title": "UseDebug",
-						"type": "boolean",
-						"default": false
+					"name": {
+						"title": "name",
+						"type": "string",
+						"minLength": 1,
+						"default": "torcado"
 					}
 				}
 			}
