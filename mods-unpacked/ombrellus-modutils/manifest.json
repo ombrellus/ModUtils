@@ -1,0 +1,33 @@
+{
+	"name": "modutils",
+	"namespace": "ombrellus",
+	"version_number": "1.0.0",
+	"description": "modding utils :>",
+	"website_url": "",
+	"dependencies": [],
+	"extra": {
+		"godot": {
+			"authors": ["ombrellus"],
+			"tags": ["utils"],
+			"description_rich": "",
+			"optional_dependencies": [],
+			"load_before": [],
+			"incompatibilities": [],
+			"compatible_mod_loader_version": ["6.2.0"],
+			"compatible_game_version": ["3.2.0"],
+			"config_schema": {
+				"$schema": "https://json-schema.org/draft/2020-12/schema",
+				"title": "Config",
+				"description": "Config",
+				"type": "object",
+				"properties": {
+					"debug": {
+						"title": "UseDebug",
+						"type": "boolean",
+						"default": false
+					}
+				}
+			}
+		}
+	}
+}

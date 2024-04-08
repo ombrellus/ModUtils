@@ -1,0 +1,50 @@
+extends "res://src/title/panel/character.gd"
+
+@onready var utils = get_node("/root/ModLoader/ombrellus-modutils")
+
+var charName:String
+var charVisualName:String
+var mod:String
+var moddedReady:bool = false
+var topTex
+var botTex
+
+func _ready():
+	super._ready()
+	var List = Players.unlockedCharList
+#~if OS.has_feature("torc_debug")
+	List = Players.charList
+#~endif
+	char = List[Global.title._charId-1]
+	if char >= 7:
+		for x in utils.customCharacters:
+			if x.pos == char:
+				charName = x.name
+				mod = x.mod
+				charVisualName = x.gameName
+				topTex = x.icon
+				botTex = x.icon_bg
+		moddedReady = true
+		updateChar()
+
+func updateChar():
+	super.updateChar()
+	if moddedReady:
+		char_icon.texture = topTex
+		char_icon_bg.texture = botTex
+		button.title = charVisualName
+		button.update()
+
+func startGame():
+	super.startGame()
+	Players.details = [{
+		char = char,
+		charInt = charName,
+		color = color,
+		bgColor = Color.TRANSPARENT,
+		colorState = colorState,
+		skin = skin,
+		charMod = mod
+	}]
+	Players.saveData(true)
+	
