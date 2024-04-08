@@ -1,17 +1,13 @@
 # ModUtils
-General library for WindowKill modding (Current version 0.3.0)
+Library for WindowKill content mods (Current version 0.3.0)
 
-GameBanana page: https://gamebanana.com/mods/500748
-
-GameBanan use guide: https://gamebanana.com/tuts/17300
+Workshop page: https://steamcommunity.com/sharedfiles/filedetails/?id=3207573074&searchtext=
 
 ## Player guide
-Download the mod from the releases page or the GameBanana page if a mod requires it and import it as a mod with GUMM
+Just subscribe to the mod on the windowKill steam workshop if any mod requires it
 
 ## Modder guide
 After doing what is stated above, follow the set-up guide to get your mod up and running with ModUtils
-
-GameBanana guide: https://gamebanana.com/tuts/17300
 
 Wiki: https://github.com/ombrellus/ModUtils/wiki
 
@@ -20,6 +16,5 @@ This is a multifunction content mod library for WindowKill, that allows modders 
 - Add custom enemies
 - Add custom bosses
 - Add custom upgrades
-- Add custom options and tabs
-- Easily generating windows in game/title
-- Connect to various new signals
+- Add custom characters
+- Easily generating windows in the game
