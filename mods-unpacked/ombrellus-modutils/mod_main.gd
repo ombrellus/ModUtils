@@ -22,6 +22,9 @@ var customCharacters:Array[Dictionary] =[]
 var characterNum:int
 var allCharacterNum:int
 
+var loadScn:bool = true
+var loadRes:bool = true
+
 #region LOADING SHIT
 
 func _init() -> void:
@@ -44,6 +47,10 @@ func _on_current_config_changed(config: ModConfig) -> void:
 	if config.mod_id == AUTHORNAME_MODNAME_DIR:
 		if Global.main != null and config.data.debug:
 			_debugWindow()
+		if config.data.scn:
+			loadScn = config.data.scn
+		if config.data.res:
+			loadRes = config.data.scn
 
 func _ready() -> void:
 	install_script_extensions()
@@ -89,10 +96,10 @@ func _loadMain():
 
 #region ENEMIES AND BOSSES
 func addEnemyToPool(modName:String,name:String,_weigth:float):
-	customEnemies.append({type = load("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/"+name+".scn"),weight = _weigth,distribution = load("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/curve.tres"),waveWeight = 1.0,mod=modName})
+	customEnemies.append({type = _checkForScene("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/"+name),weight = _weigth,distribution = _checkForResource("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/curve"),waveWeight = 1.0,mod=modName})
 
 func addEnemyToPoolDirect(modName:String,name:String,_weigth:float):
-	Global.main.enemySelection.append({type = load("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/"+name+".scn"),weight = _weigth,distribution = load("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/curve.tres"),waveWeight = 1.0,mod=modName})
+	Global.main.enemySelection.append({type = _checkForScene("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/"+name),weight = _weigth,distribution = _checkForResource("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/curve"),waveWeight = 1.0,mod=modName})
 
 func resetModEnemies(modName:String):
 	for i in customEnemies:
@@ -110,13 +117,13 @@ func resetModBossQueue(modName:String):
 			customBossQueue.remove_at(customBossQueue.find(i))
 
 func addBossToPool(modName:String,name:String,possibility:float = 1.0,amounts = 1):
-	customBosses.append({type = load("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/"+name+".scn"),
+	customBosses.append({type = _checkForScene("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/"+name),
 	weight = possibility,
 	size = amounts,
 	mod=modName})
 
 func addBossToQueue(modName:String,name:String,pos:int):
-	customBossQueue.append({mod=modName,type= load("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/"+name+".scn"),position = pos})
+	customBossQueue.append({mod=modName,type= _checkForScene("res://mods-unpacked/"+modName+ "/extensions/src/enemy/" +name+"/"+name),position = pos})
 #endregion
 
 #region CUSTOM UPGRADES
@@ -133,7 +140,7 @@ func addItemsToPool(modName:String,upgrades:Dictionary):
 
 #region CUSTOM CHARACTERS
 func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
-	data.spawnRate = load("res://mods-unpacked/"+modName+"/extensions/src/character/"+data.internalName+"/curve.res")
+	data.spawnRate = _checkForResource("res://mods-unpacked/"+modName+"/extensions/src/character/"+data.internalName+"/curve")
 	var actual = {characterNum:{
 	internalName = data.internalName,
 	displayName = data.displayName,
@@ -143,6 +150,7 @@ func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 	wallShrinkSpeed = data.wallShrinkSpeed,
 	wallResistance = data.wallResistance,
 	priceScale = data.priceScale,
+	statIcon = load("res://mods-unpacked/"+modName+"/extensions/src/character/"+data.internalName+"/top"+data.spritesExtension),
 	icon = load("res://mods-unpacked/"+modName+"/extensions/src/character/"+data.internalName+"/top"+data.spritesExtension),
 	icon_bg = load("res://mods-unpacked/"+modName+"/extensions/src/character/"+data.internalName+"/back"+data.spritesExtension),
 	skins = data.skins,
@@ -159,6 +167,7 @@ func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 	buy = ability.buy,
 	description = ability.description,
 	weight = ability.weight,
+	_weight = ability._weight,
 	mod = modName}
 	}
 	Players.charData.merge(actual)
@@ -251,5 +260,24 @@ func createDebugButton(cont:VBoxContainer,name:String,call:Callable):
 	butt.text = name
 	butt.button_down.connect(call)
 	cont.add_child(butt)
+
+func _checkForScene(path:String) -> PackedScene:
+	if ResourceLoader.exists(path+".tscn"):
+		return load(path+".tscn")
+	elif loadScn:return load(path+".scn")
+	else:
+		print_debug("Could not find any file with the path " + path)
+		return null
+
+func _checkForResource(path:String) -> Resource:
+	if ResourceLoader.exists(path+".tres"):
+		return load(path+".tres")
+	elif loadRes:return load(path+".res")
+	else:
+		print_debug("Could not find any file with the path " + path)
+		return null
+
+func _errorNotFile(path:String):
+	print_debug("Could not find any file with the path " + path)
 #endregion
 
