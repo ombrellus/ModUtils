@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=3 uid="uid://dbbw60iyrueck"]
+
+[ext_resource type="Texture2D" uid="uid://cepas2rnamesr" path="res://mods-unpacked/yourname-modname/extensions/src/character/cool_character/back.svg" id="1_dhmdq"]
+[ext_resource type="Script" path="res://mods-unpacked/yourname-modname/extensions/src/character/cool_character/cool_character.gd" id="1_f2kgw"]
+[ext_resource type="Texture2D" uid="uid://p4tpmnebny2p" path="res://mods-unpacked/yourname-modname/extensions/src/character/cool_character/top.svg" id="2_pl0jn"]
+
+[node name="CoolCharacter" type="Node2D"]
+script = ExtResource("1_f2kgw")
+
+[node name="canvas" type="Node2D" parent="."]
+
+[node name="charBG" type="Node2D" parent="canvas"]
+
+[node name="bgSprite" type="Sprite2D" parent="canvas/charBG"]
+texture = ExtResource("1_dhmdq")
+
+[node name="charFG" type="Node2D" parent="canvas"]
+
+[node name="Sprite" type="Sprite2D" parent="canvas/charFG"]
+texture = ExtResource("2_pl0jn")
+
+[node name="flashCanvas" type="Node2D" parent="."]
+
+[node name="charFlashBG" type="Node2D" parent="flashCanvas"]
+
+[node name="bgSprite" type="Sprite2D" parent="flashCanvas/charFlashBG"]
+texture = ExtResource("1_dhmdq")
+
+[node name="charFlashFG" type="Node2D" parent="flashCanvas"]
+
+[node name="Sprite" type="Sprite2D" parent="flashCanvas/charFlashFG"]
+texture = ExtResource("2_pl0jn")

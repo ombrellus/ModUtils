@@ -1,0 +1,30 @@
+{
+	"dependencies": ["ombrellus-modutils"],
+	"description": "Description of your mod...",
+	"extra": {
+		"godot": {
+			"authors": [
+				"yourname"
+			],
+			"compatible_game_version": [
+				"3.2.0"
+			],
+			"compatible_mod_loader_version": [
+				"6.2.0"
+			],
+			"config_schema": {
+
+			},
+			"description_rich": "",
+			"image": null,
+			"incompatibilities": [],
+			"load_before": [],
+			"optional_dependencies": [],
+			"tags": []
+		}
+	},
+	"name": "modname",
+	"namespace": "yourname",
+	"version_number": "0.0.1",
+	"website_url": ""
+}
