@@ -1,0 +1,32 @@
+[gd_scene load_steps=5 format=3 uid="uid://bh5quj75guu6p"]
+
+[ext_resource type="Shape2D" uid="uid://cs4jjilh2ewhj" path="res://src/enemy/triangle/shape.tres" id="1_jevsm"]
+[ext_resource type="Script" path="res://mods-unpacked/yourname-modname/extensions/src/enemy/cool_enemy/cool_enemy.gd" id="1_smv7f"]
+[ext_resource type="Script" path="res://src/enemy/enemy.gd" id="2_pdc2r"]
+[ext_resource type="Texture2D" uid="uid://vdeejlcnd7b1" path="res://mods-unpacked/yourname-modname/extensions/src/enemy/cool_enemy/triangle.svg" id="3_guhno"]
+
+[node name="CoolEnemy" type="RigidBody2D"]
+collision_layer = 128
+collision_mask = 8320
+script = ExtResource("1_smv7f")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="."]
+visible = false
+shape = ExtResource("1_jevsm")
+
+[node name="Enemy" type="Node" parent="."]
+script = ExtResource("2_pdc2r")
+health = 2.0
+
+[node name="Area2D" type="Area2D" parent="."]
+visible = false
+collision_layer = 64
+collision_mask = 48
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+visible = false
+shape = ExtResource("1_jevsm")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+rotation = 1.5708
+texture = ExtResource("3_guhno")
