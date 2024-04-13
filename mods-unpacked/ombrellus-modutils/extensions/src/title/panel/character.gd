@@ -12,9 +12,10 @@ var botTex
 func _ready():
 	super._ready()
 	var List = Players.unlockedCharList
-#~if OS.has_feature("torc_debug")
-	List = Players.charList
-#~endif
+	
+	if OS.has_feature("editor"):
+		List = Players.charList
+	
 	char = List[Global.title._charId-1]
 	if char >= 7:
 		for x in utils.customCharacters:
@@ -26,6 +27,7 @@ func _ready():
 				botTex = x.icon_bg
 		moddedReady = true
 		updateChar()
+	size = Vector2i(50,50)
 
 func updateChar():
 	super.updateChar()

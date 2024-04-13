@@ -34,9 +34,10 @@ func updateChar(setState:bool =false):
 func _ready():
 	super._ready()
 	var List = Players.unlockedCharList
-#~if OS.has_feature("torc_debug")
-	List = Players.charList
-#~endif
+	
+	if OS.has_feature("editor"):
+		List = Players.charList
+	
 	if List[charIndex] >= 7:
 		for x in utils.customCharacters:
 			if x.pos == List[charIndex]:

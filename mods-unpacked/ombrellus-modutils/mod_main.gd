@@ -270,6 +270,8 @@ func _checkForScene(path:String) -> PackedScene:
 		return null
 
 func _checkForResource(path:String) -> Resource:
+	print(path+".tres")
+	print(ResourceLoader.exists(path+".tres"))
 	if ResourceLoader.exists(path+".tres"):
 		return load(path+".tres")
 	elif loadRes:return load(path+".res")
