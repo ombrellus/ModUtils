@@ -1,0 +1,60 @@
+[gd_scene load_steps=6 format=3 uid="uid://dg3ywbfckn2ur"]
+
+[ext_resource type="Script" path="res://src/title/panel/endless.gd" id="1_pevu0"]
+[ext_resource type="Shader" path="res://src/title/panel/bg.gdshader" id="2_jv5sd"]
+[ext_resource type="Texture2D" uid="uid://cmri22xp33syw" path="res://src/title/bg_icons/endless.svg" id="3_dy3qj"]
+[ext_resource type="PackedScene" uid="uid://dijlr3w7888m7" path="res://src/ui/button/button.tscn" id="4_wgq48"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1fqrm"]
+shader = ExtResource("2_jv5sd")
+shader_parameter/point = Vector2(600, 197)
+shader_parameter/pos = Vector2(0, 0)
+shader_parameter/modulate2 = Vector4(0.045, -0.27, 0.673, 1)
+
+[node name="Window" type="Window"]
+position = Vector2i(0, 32)
+size = Vector2i(360, 300)
+rect = Rect2i(0, 32, 360, 300)
+script = ExtResource("1_pevu0")
+metadata/focus_control = NodePath("Control/PanelContainer/Button")
+metadata/custGame = true
+
+[node name="bg" type="TextureRect" parent="."]
+modulate = Color(0.424, 0, 0.53, 1)
+material = SubResource("ShaderMaterial_1fqrm")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_dy3qj")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PanelContainer" type="MarginContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -90.0
+offset_top = -17.5
+offset_right = 90.0
+offset_bottom = 17.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Button" parent="Control/PanelContainer" instance=ExtResource("4_wgq48")]
+unique_name_in_owner = true
+layout_mode = 2
+text = "custom"
+filled = true

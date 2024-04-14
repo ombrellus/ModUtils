@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bdxjnrp8cibhx"]
+
+[ext_resource type="Script" path="res://mods-unpacked/ombrellus-modutils/extensions/src/repellenteDiNemici.gd" id="1_2ix1g"]
+
+[node name="RepellenteDiNemici" type="Node"]
+script = ExtResource("1_2ix1g")

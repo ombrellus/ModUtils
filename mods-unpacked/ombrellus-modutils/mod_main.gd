@@ -18,9 +18,17 @@ var customEnemies:Array[Dictionary] = []
 var customBosses:Array[Dictionary] = []
 var customBossQueue:Array[Dictionary] = []
 var customCharacters:Array[Dictionary] =[]
+var customGamemodes:Array[Dictionary]
 
 var characterNum:int
 var allCharacterNum:int
+
+var selectedGamemode:String = "none"
+var gamemodeMod:String = "none"
+var gaymodeCall:Callable = func():pass
+var customGamemodeArgs:Dictionary = {timer=0.0,enemy=true,boss=true}
+
+var selectingGamemode:int = 0
 
 var loadScn:bool = true
 var loadRes:bool = true
@@ -32,6 +40,8 @@ func _init() -> void:
 	# Add extensions
 	extensions_dir_path = mod_dir_path.path_join("extensions")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/title/panel/character.gd")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/title/panel/newRun.gd")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/title/panel/endless.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/stats/recordStats.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/multiplayer/player_slot/player_slot.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/autoload/players.gd")
@@ -60,6 +70,12 @@ func _ready() -> void:
 	characterNum = Players.Char.size()
 	Events.runStarted.connect(_loadMain)
 	Events.bossSpawned.connect(_bossSpawnStuff)
+	Events.titleReturn.connect(func():
+		selectedGamemode= "none"
+		gamemodeMod= "none"
+		gaymodeCall= func():pass
+		customGamemodeArgs = {timer=0.0,enemy=true,boss=true}
+			)
 
 func _disable():
 	pass
@@ -84,14 +100,32 @@ func _bossSpawnStuff(boss:Node):
 
 func _loadMain():
 	var config = ModLoaderConfig.get_current_config(AUTHORNAME_MODNAME_DIR)
+	if customGamemodeArgs.timer != 0.0:
+		Global.timedModeLimit = 60.0* customGamemodeArgs.timer
+	else:
+		Global.timedModeLimit = 60.0*20.0
+	if not customGamemodeArgs.enemy or not customGamemodeArgs.boss:
+		var ifYouThinkOfSomethingBetterDMme = load("res://mods-unpacked/ombrellus-modutils/extensions/src/repellenteDiNemici.tscn").instantiate()
+		ifYouThinkOfSomethingBetterDMme.nemici = customGamemodeArgs.enemy
+		ifYouThinkOfSomethingBetterDMme.boss = customGamemodeArgs.boss
+		Global.main.add_child(ifYouThinkOfSomethingBetterDMme)
+		
 	Global.main.enemySelection += customEnemies
 	for i in customBossQueue:
 		Global.main.bossQueue.insert(i.position,i.type)
 	ShopData.abilityChoices.merge(customCharAbility)
 	ShopData.shopItemChoices.merge(customUpgrades)
+	gaymodeCall.call()
 	if config.data.debug:
 		_debugWindow()
 
+#endregion
+
+#region CHECKS
+func checkCustomGamemode(modName:String,gamemode:String)->bool:
+	if gamemodeMod == modName and gamemode == selectedGamemode:
+		return true
+	return false
 #endregion
 
 #region ENEMIES AND BOSSES
@@ -182,6 +216,11 @@ func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 	})
 	Players.updateUnlocks()
 	characterNum+=1
+#endregion
+
+#region CUSTOM GAMEMODES
+func addCustomGamemode(modName:String,modeName:String,modeIconPath:String,spawnEnemy:bool = true,spawnBosses:bool = true,timed:float=0.0,extraReadyCall:Callable=func():pass):
+	customGamemodes.append({mod=modName,name=modeName,call=extraReadyCall,enemy=spawnEnemy,boss=spawnBosses,timer=timed,icon = load(modeIconPath)})
 #endregion
 
 #region CUSTOM WINDOWS
