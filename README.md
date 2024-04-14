@@ -17,4 +17,5 @@ This is a multifunction content mod library for WindowKill, that allows modders 
 - Add custom bosses
 - Add custom upgrades
 - Add custom characters
+- Add custom gamemodes
 - Easily generating windows in the game
