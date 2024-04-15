@@ -28,6 +28,34 @@ var gamemodeMod:String = "none"
 var gaymodeCall:Callable = func():pass
 var customGamemodeArgs:Dictionary = {timer=0.0,enemy=true,boss=true}
 
+var coolUpgardes= {
+	cool = {
+		name = (func()->Array:
+			return ["coolness"]
+			),
+		icon = (func()->Array:
+			return [preload("res://src/ui/shop/wealth.svg")]
+			),
+		priceType = 0,
+		value = (func(): 
+			return Global.wealth
+			),
+		price = (func(): 
+			var total := 0
+			for d in Players.details:
+				#total += round(pow((Global.wealth+1), 2.0) * 25.0) * Players.charData[d.char].priceScale
+				total += round((36 + pow(2, 2.4*pow(Global.wealth, 0.5) + 4.0)) * Players.charData[d.char].priceScale)
+			return total
+			),
+		buy = (func():
+			Global.wealth += 1
+			print("coolness")
+			),
+		weight = 1,
+		_weight = 1,
+		baseWeight = 1,
+	}
+}
 var selectingGamemode:int = 0
 
 var loadScn:bool = true
@@ -169,6 +197,8 @@ func resetModItems(modName:String):
 func addItemsToPool(modName:String,upgrades:Dictionary):
 	for i in upgrades.keys():
 		upgrades[i].mod = modName
+		upgrades[i].internalName = i
+		Global.manifestCounts[i] = 0
 	customUpgrades.merge(upgrades)
 #endregion
 
@@ -283,8 +313,8 @@ func _debugWindow():
 	cont.add_child(holder)
 	createDebugButton(holder,"Spawn next boss",func():
 		Global.main.spawnBoss())
-	createDebugButton(holder,"Give 1k coins",func():
-		Global.coins = Global.coins + 1000)
+	createDebugButton(holder,"Spawn next enemy",func():
+		Global.main.spawnTimer = 0)
 	createDebugButton(holder,"Give 10k coins",func():
 		Global.coins = Global.coins + 10000)
 	createDebugButton(holder,"Spawn token",func():
