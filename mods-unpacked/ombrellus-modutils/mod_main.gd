@@ -28,6 +28,9 @@ var gamemodeMod:String = "none"
 var gaymodeCall:Callable = func():pass
 var customGamemodeArgs:Dictionary = {timer=0.0,enemy=true,boss=true}
 
+var customItemNames:Dictionary
+var customItemIcons:Dictionary
+
 var coolUpgardes= {
 	cool = {
 		name = (func()->Array:
@@ -79,6 +82,7 @@ func install_script_extensions() -> void:
 	
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/enemy/enemy.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/player/player.gd")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/shop/shopItem.gd")
 
 func _on_current_config_changed(config: ModConfig) -> void:
 	# Check if the config of your mod has changed!
@@ -125,6 +129,23 @@ func _bossSpawnStuff(boss:Node):
 				Global.main.bossQueue.append(i.type)
 		Global.main.bossQueue.shuffle()
 		bossQueueUpdated.emit(Global.main.bossQueue)
+
+func _findItemIcon(entry:String,charInt:String,modName:String) -> Resource:
+	var pathName:String = charInt+"_"+modName
+	if customItemIcons.has(pathName):
+		if customItemIcons[pathName].has(entry):
+			return customItemIcons[pathName][entry]
+	return null
+
+func _findItemName(entry:String,charInt:String,modName:String) -> String:
+	var pathName:String = charInt+"_"+modName
+	print(pathName)
+	if customItemNames.has(pathName):
+		print("ok what")
+		if customItemNames[pathName].has(entry):
+			print(customItemNames[pathName][entry])
+			return customItemNames[pathName][entry]
+	return "OkIHopeNoOneUsesThisLineAsAnActualName"
 
 func _loadMain():
 	var config = ModLoaderConfig.get_current_config(AUTHORNAME_MODNAME_DIR)
@@ -221,6 +242,8 @@ func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 	mod = modName,
 	unlocked = true,
 	}}
+	customItemIcons[data.internalName+"_"+modName] = {}
+	customItemNames[data.internalName+"_"+modName] = {}
 	var actualAbility={characterNum:{
 	internalName = ability.internalName,
 	name = ability.name,
@@ -246,6 +269,12 @@ func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 	})
 	Players.updateUnlocks()
 	characterNum+=1
+
+func addCharacterItemIcon(modName:String,charName:String,itemName:String,iconPath:String):
+	customItemIcons[charName+"_"+modName][itemName] = load(iconPath)
+
+func addCharacterItemName(modName:String,charName:String,itemName:String,newName:String):
+	customItemNames[charName+"_"+modName][itemName] = newName
 #endregion
 
 #region CUSTOM GAMEMODES
