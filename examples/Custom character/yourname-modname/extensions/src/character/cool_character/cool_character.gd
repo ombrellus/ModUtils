@@ -66,7 +66,7 @@ func updateMove(delta):
 	
 
 func useAbility(delta):
-	if mod.coolAbility > 0:
+	if mod.coolAbilityCount > 0:
 		if Global.escaped:
 			return
 		if (Global.abilityCooldown > 0.0 and Global.refreshStack <= 0):
