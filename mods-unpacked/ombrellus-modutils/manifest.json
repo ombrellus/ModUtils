@@ -7,7 +7,7 @@
 				"ombrellus"
 			],
 			"compatible_game_version": [
-				"3.2.0"
+				"3.2.1"
 			],
 			"compatible_mod_loader_version": [
 				"6.2.0"
@@ -47,6 +47,6 @@
 	},
 	"name": "modutils",
 	"namespace": "ombrellus",
-	"version_number": "1.1.2",
+	"version_number": "1.1.3",
 	"website_url": ""
 }

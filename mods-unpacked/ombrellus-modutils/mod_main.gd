@@ -303,7 +303,7 @@ static func addGameWindow(name:String,spawnPos:Vector2,size:Vector2,parent:Node 
 	Game.reorderWindows()
 	return window
 
-static func addTitleWindow(name:String,pos:Vector2i,buttonArgs={"has"=false,"name"="button"}) -> Dictionary:
+static func addTitleWindow(name:String,pos:Vector2i,buttonArgs={"has"=true,"name"="button"}) -> Dictionary:
 	var win = Global.title.addWindow(Vector2.INF, preload("res://src/title/panel/blank.tscn"), {name = name})
 	if buttonArgs["has"] == true:
 		var cont:Control = Control.new()
