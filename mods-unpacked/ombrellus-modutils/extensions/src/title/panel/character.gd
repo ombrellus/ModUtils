@@ -4,7 +4,7 @@ extends "res://src/title/panel/character.gd"
 
 var charName:String
 var charVisualName:String
-var mod:String
+var mod:String = "booby sex"
 var moddedReady:bool = false
 var topTex
 var botTex
@@ -38,6 +38,7 @@ func updateChar():
 		button.update()
 
 func startGame():
+	print("run modUtils")
 	super.startGame()
 	Players.details = [{
 		char = char,
@@ -48,5 +49,9 @@ func startGame():
 		skin = skin,
 		charMod = mod
 	}]
+	print("before save data")
+	print(Players.details[0].charMod)
 	Players.saveData(true)
+	print("after save data")
+	print(Players.details[0].charMod)
 	

@@ -18,7 +18,8 @@ var customEnemies:Array[Dictionary] = []
 var customBosses:Array[Dictionary] = []
 var customBossQueue:Array[Dictionary] = []
 var customCharacters:Array[Dictionary] =[]
-var customGamemodes:Array[Dictionary]
+var customGamemodes:Array[Dictionary]=[]
+var customTitleWidnows:Array[Dictionary]=[]
 
 var characterNum:int
 var allCharacterNum:int
@@ -102,33 +103,47 @@ func _ready() -> void:
 	characterNum = Players.Char.size()
 	Events.runStarted.connect(_loadMain)
 	Events.bossSpawned.connect(_bossSpawnStuff)
-	Events.titleReturn.connect(func():
-		selectedGamemode= "none"
-		gamemodeMod= "none"
-		gaymodeCall= func():pass
-		customGamemodeArgs = {timer=0.0,enemy=true,boss=true}
-			)
+	Events.titleReturn.connect(_titleThings)
+
+func _titleThings():
+	selectedGamemode= "none"
+	gamemodeMod= "none"
+	gaymodeCall= func():pass
+	customGamemodeArgs = {timer=0.0,enemy=true,boss=true}
+	Utils.runLater(100,func():
+		for i in customTitleWidnows:
+			createTitleWindow(i.mod,i.windowName,i.windowIcon,i.color,i.splits)
+		)
+
+
 
 func _disable():
 	pass
 #endregion
 
+#region DA FUNCTIONS
+#endregion
+
 #region NODE HANDLING
-func _bossSpawnStuff(boss:Node):
-	if Global.main.bossQueue.size() == 0:
-		Global.main.bossQueue = [
+func shuffleBosses() -> Array:
+	Global.main.bossQueue = [
 			Global.main.BossSpike, Global.main.BossSnake, Global.main.BossSlime,
 			Global.main.BossSpike, Global.main.BossSnake, Global.main.BossSlime, Global.main.BossVirus,
 		]
-		if randf() < 0.33:
-				Global.main.bossQueue.append(Global.main.BossOrb)
-		for i in customBosses:
-			if i.weight == 1.0:
-				Global.main.bossQueue.append(i.type)
-			elif randf() < i.weight:
-				Global.main.bossQueue.append(i.type)
-		Global.main.bossQueue.shuffle()
-		bossQueueUpdated.emit(Global.main.bossQueue)
+	if randf() < 0.33:
+			Global.main.bossQueue.append(Global.main.BossOrb)
+	for i in customBosses:
+		if i.weight == 1.0:
+			Global.main.bossQueue.append(i.type)
+		elif randf() < i.weight:
+			Global.main.bossQueue.append(i.type)
+	Global.main.bossQueue.shuffle()
+	bossQueueUpdated.emit(Global.main.bossQueue)
+	return Global.main.bossQueue
+
+func _bossSpawnStuff(boss:Node):
+	if Global.main.bossQueue.size() == 0:
+		shuffleBosses()
 
 func _findItemIcon(entry:String,charInt:String,modName:String) -> Resource:
 	var pathName:String = charInt+"_"+modName
@@ -171,10 +186,6 @@ func _loadMain():
 #endregion
 
 #region CHECKS
-func checkCustomGamemode(modName:String,gamemode:String)->bool:
-	if gamemodeMod == modName and gamemode == selectedGamemode:
-		return true
-	return false
 #endregion
 
 #region ENEMIES AND BOSSES
@@ -278,12 +289,18 @@ func addCharacterItemName(modName:String,charName:String,itemName:String,newName
 #endregion
 
 #region CUSTOM GAMEMODES
-func addCustomGamemode(modName:String,modeName:String,modeIconPath:String,spawnEnemy:bool = true,spawnBosses:bool = true,timed:float=0.0,extraReadyCall:Callable=func():pass):
-	customGamemodes.append({mod=modName,name=modeName,call=extraReadyCall,enemy=spawnEnemy,boss=spawnBosses,timer=timed,icon = load(modeIconPath)})
+func addCustomGamemode(modName:String,modeName:String,modeIconPath:String,iconColor:Color,spawnEnemy:bool = true,spawnBosses:bool = true,timed:float=0.0,extraReadyCall:Callable=func():pass):
+	customGamemodes.append({mod=modName,name=modeName,call=extraReadyCall,enemy=spawnEnemy,boss=spawnBosses,timer=timed,icon = load(modeIconPath),color = iconColor})
+
+func checkCustomGamemode(modName:String,gamemode:String)->bool:
+	if gamemodeMod == modName and gamemode == selectedGamemode:
+		return true
+	return false
+
 #endregion
 
 #region CUSTOM WINDOWS
-static func addGameWindow(name:String,spawnPos:Vector2,size:Vector2,parent:Node = Global.gameArea,camera:bool=true,z_index:int = 10,no_drag:bool=false) -> Window:
+func addGameWindow(name:String,spawnPos:Vector2,size:Vector2,parent:Node = Global.gameArea,camera:bool=true,z_index:int = 10,no_drag:bool=false) -> Window:
 
 	var window = Window.new()
 	window.size = size
@@ -303,25 +320,18 @@ static func addGameWindow(name:String,spawnPos:Vector2,size:Vector2,parent:Node 
 	Game.reorderWindows()
 	return window
 
-static func addTitleWindow(name:String,pos:Vector2i,buttonArgs={"has"=true,"name"="button"}) -> Dictionary:
-	var win = Global.title.addWindow(Vector2.INF, preload("res://src/title/panel/blank.tscn"), {name = name})
-	if buttonArgs["has"] == true:
-		var cont:Control = Control.new()
-		cont.size = Vector2(360,300)
-		cont.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		cont.set_anchors_preset(Control.PRESET_FULL_RECT)
-		win["window"].add_child(cont)
-		var panel = PanelContainer.new()
-		panel.set_anchors_preset(Control.PRESET_CENTER)
-		panel.size = Vector2(360*0.5,54)
-		panel.position = Vector2(-270,-185)
-		panel.mouse_filter=Control.MOUSE_FILTER_IGNORE
-		cont.add_child(panel)
-		var but = preload("res://src/ui/button/button.tscn").instantiate()
-		but.text = buttonArgs["name"]
-		panel.add_child(but)
-		return {"window"=win,"button"=but}
-	return {"window"=win}
+func addTitleWindow(modName:String,name:String,icon:Texture2D,iconColor:Color,splitWindows:Array):
+	customTitleWidnows.append({mod=modName,windowName=name,windowIcon=icon,color=iconColor,splits=splitWindows})
+
+func createTitleWindow(modName:String,name:String,icon:Texture2D,iconColor:Color,splitWindows:Array) -> TitleWindow:
+	var win = Global.title.addWindow(Vector2.INF, load("res://mods-unpacked/ombrellus-modutils/extensions/src/title/panel/titleUtil.tscn"), {name = name})
+	var actualWin = win.window
+	actualWin.bg.texture = icon
+	actualWin.bg.modulate = iconColor
+	actualWin.button.text = name
+	actualWin.splitWindows = splitWindows
+	actualWin.button.update()
+	return actualWin
 
 #endregion
 
@@ -348,7 +358,9 @@ func _debugWindow():
 		Global.coins = Global.coins + 10000)
 	createDebugButton(holder,"Spawn token",func():
 		Utils.spawn(preload("res://src/element/power_token/powerToken.tscn"),Vector2(Global.player.global_position.x,Global.player.global_position.y),Global.main.coin_area))
-
+	createDebugButton(holder,"Refill ability",func():
+		Global.abilityCooldown = 0
+		Global.abilityTimer = 0)
 
 func createDebugButton(cont:VBoxContainer,name:String,call:Callable):
 	var uselessText = Label.new()

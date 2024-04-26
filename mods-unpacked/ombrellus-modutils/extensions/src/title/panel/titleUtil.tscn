@@ -1,0 +1,76 @@
+[gd_scene load_steps=6 format=3 uid="uid://b1nx24axyw1c"]
+
+[ext_resource type="Script" path="res://mods-unpacked/ombrellus-modutils/extensions/src/title/panel/titleUtil.gd" id="1_6b4hb"]
+[ext_resource type="Shader" path="res://src/title/panel/bg.gdshader" id="2_xiurh"]
+[ext_resource type="Texture2D" uid="uid://1s7ptp6x0qkq" path="res://src/title/bg_icons/newRun.svg" id="3_51m7h"]
+[ext_resource type="PackedScene" uid="uid://dijlr3w7888m7" path="res://src/ui/button/button.tscn" id="4_gepil"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_vo4xn"]
+shader = ExtResource("2_xiurh")
+shader_parameter/point = Vector2(-320, 197)
+shader_parameter/pos = Vector2(0, 0)
+shader_parameter/modulate2 = Vector4(0, 0, 1.153, 1)
+
+[node name="Window" type="Window"]
+position = Vector2i(0, 32)
+size = Vector2i(400, 320)
+rect = Rect2i(0, 32, 400, 320)
+script = ExtResource("1_6b4hb")
+metadata/focus_control = NodePath("Control/PanelContainer/Button")
+
+[node name="bg" type="TextureRect" parent="."]
+modulate = Color(0.085015, 0.49, 0.0637, 1)
+material = SubResource("ShaderMaterial_vo4xn")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_51m7h")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="focusDummy" type="Control" parent="Control" groups=["focus_dummy"]]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 40.0
+grow_horizontal = 2
+focus_neighbor_left = NodePath("../PanelContainer/Button")
+focus_neighbor_top = NodePath("../PanelContainer/Button")
+focus_neighbor_right = NodePath("../PanelContainer/Button")
+focus_neighbor_bottom = NodePath("../PanelContainer/Button")
+focus_next = NodePath("../PanelContainer/Button")
+focus_previous = NodePath("../PanelContainer/Button")
+focus_mode = 2
+
+[node name="PanelContainer" type="MarginContainer" parent="Control"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -90.0
+offset_top = -17.5
+offset_right = 90.0
+offset_bottom = 17.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Button" parent="Control/PanelContainer" instance=ExtResource("4_gepil")]
+unique_name_in_owner = true
+layout_mode = 2
+text = "new run"
+filled = true

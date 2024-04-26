@@ -10,6 +10,7 @@ func _ready():
 		utils.selectingGamemode+=1
 		button.text = curMode.name
 		bg.texture = curMode.icon
+		bg.modulate = curMode.color
 		button.update()
 	else:
 		utils.selectingGamemode = 0
