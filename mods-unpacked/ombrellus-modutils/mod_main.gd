@@ -14,12 +14,15 @@ signal bossQueueUpdated
 var customUpgrades:Dictionary = {}
 var customCharAbility:Dictionary = {}
 
+var thingier:Node
+
 var customEnemies:Array[Dictionary] = []
 var customBosses:Array[Dictionary] = []
 var customBossQueue:Array[Dictionary] = []
 var customCharacters:Array[Dictionary] =[]
 var customGamemodes:Array[Dictionary]=[]
 var customTitleWidnows:Array[Dictionary]=[]
+var ambushes:Array[Dictionary]= []
 
 var characterNum:int
 var allCharacterNum:int
@@ -65,6 +68,8 @@ var selectingGamemode:int = 0
 var loadScn:bool = true
 var loadRes:bool = true
 
+var ambushTimer:int = 30
+
 #region LOADING SHIT
 
 func _init() -> void:
@@ -94,6 +99,8 @@ func _on_current_config_changed(config: ModConfig) -> void:
 			loadScn = config.data.scn
 		if config.data.res:
 			loadRes = config.data.scn
+		if config.data.ambush:
+			ambushTimer = config.data.ambush
 
 func _ready() -> void:
 	install_script_extensions()
@@ -168,11 +175,14 @@ func _loadMain():
 		Global.timedModeLimit = 60.0* customGamemodeArgs.timer
 	else:
 		Global.timedModeLimit = 60.0*20.0
-	if not customGamemodeArgs.enemy or not customGamemodeArgs.boss:
+	if not customGamemodeArgs.enemy or not customGamemodeArgs.boss or not ambushes.is_empty():
 		var ifYouThinkOfSomethingBetterDMme = load("res://mods-unpacked/ombrellus-modutils/extensions/src/repellenteDiNemici.tscn").instantiate()
 		ifYouThinkOfSomethingBetterDMme.nemici = customGamemodeArgs.enemy
 		ifYouThinkOfSomethingBetterDMme.boss = customGamemodeArgs.boss
+		ifYouThinkOfSomethingBetterDMme.maxAmbush = ambushTimer
 		Global.main.add_child(ifYouThinkOfSomethingBetterDMme)
+		thingier = ifYouThinkOfSomethingBetterDMme
+	else: thingier = null
 		
 	Global.main.enemySelection += customEnemies
 	for i in customBossQueue:
@@ -186,6 +196,14 @@ func _loadMain():
 #endregion
 
 #region CHECKS
+#endregion
+
+#region AMBUSHES
+func addAmbushToPool(modName:String,name:String,chance:float, delay_minutes:float = 0.0):
+	ambushes.append({type = _checkForScene("res://mods-unpacked/"+modName+ "/extensions/src/ambush/" +name+"/"+name),
+	weight = chance,
+	delay = delay_minutes,
+	mod=modName})
 #endregion
 
 #region ENEMIES AND BOSSES
@@ -340,16 +358,22 @@ func _debugWindow():
 	var debugWin = addGameWindow("debug",Game.randomSpawnLocation(400,200),Vector2(300,300),Global.gameArea,false,30,false)
 	var cont = Control.new()
 	cont.layout_direction =Control.LAYOUT_DIRECTION_LTR
-	cont.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cont.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	cont.size = Vector2(300,300)
 	cont.mouse_filter=Control.MOUSE_FILTER_PASS
 	debugWin.add_child(cont)
+	var WHAT = ScrollContainer.new()
+	WHAT.layout_direction = Control.LAYOUT_DIRECTION_INHERITED
+	WHAT.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
+	WHAT.set_anchors_preset(Control.PRESET_FULL_RECT)
+	WHAT.size = Vector2(300,300)
+	cont.add_child(WHAT)
 	var holder = VBoxContainer.new()
 	holder.layout_direction = Control.LAYOUT_DIRECTION_INHERITED
 	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
 	holder.size = Vector2(300,300)
 	holder.mouse_filter=Control.MOUSE_FILTER_PASS
-	cont.add_child(holder)
+	WHAT.add_child(holder)
 	createDebugButton(holder,"Spawn next boss",func():
 		Global.main.spawnBoss())
 	createDebugButton(holder,"Spawn next enemy",func():
@@ -361,11 +385,13 @@ func _debugWindow():
 	createDebugButton(holder,"Refill ability",func():
 		Global.abilityCooldown = 0
 		Global.abilityTimer = 0)
+	createDebugButton(holder,"Time skip",func():
+		Global.gameTime+= 1*60.0)
+	createDebugButton(holder,"Spawn Ambush",func():
+		if not thingier == null:
+			thingier.spawnAmbush())
 
 func createDebugButton(cont:VBoxContainer,name:String,call:Callable):
-	var uselessText = Label.new()
-	uselessText.text = name
-	cont.add_child(uselessText)
 	var butt = Button.new()
 	butt.text = name
 	butt.button_down.connect(call)

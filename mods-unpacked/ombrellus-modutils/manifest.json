@@ -30,6 +30,11 @@
 						"default": true,
 						"title": "Load .scn scenes",
 						"type": "boolean"
+					},
+					"ambush":{
+						"default": 30,
+						"title": "Ambush timer",
+						"type": "integer"
 					}
 				},
 				"title": "Config",
@@ -47,6 +52,6 @@
 	},
 	"name": "modutils",
 	"namespace": "ombrellus",
-	"version_number": "1.1.5",
+	"version_number": "1.2.0",
 	"website_url": ""
 }

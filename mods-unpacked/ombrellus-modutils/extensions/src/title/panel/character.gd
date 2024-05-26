@@ -49,9 +49,5 @@ func startGame():
 		skin = skin,
 		charMod = mod
 	}]
-	print("before save data")
-	print(Players.details[0].charMod)
 	Players.saveData(true)
-	print("after save data")
-	print(Players.details[0].charMod)
 	

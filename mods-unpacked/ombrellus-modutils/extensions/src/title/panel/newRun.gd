@@ -12,10 +12,7 @@ func _ready():
 		var win = Utils.find(Global.title.windows.values(), func(v):
 			return v.window == self)
 		var oldChild = win.childrenIds
-		print(oldChild)
 		Global.title.split(self, games)
-		print(win.childrenIds)
 		win.childrenIds += oldChild
-		print(win.childrenIds)
 	)
 	
