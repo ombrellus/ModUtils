@@ -1,5 +1,4 @@
 extends Node
-class_name OMModUtils
 
 const AUTHORNAME_MODNAME_DIR := "ombrellus-modutils"
 const AUTHORNAME_MODNAME_LOG_NAME := "ombrellus-modutils:Main"
