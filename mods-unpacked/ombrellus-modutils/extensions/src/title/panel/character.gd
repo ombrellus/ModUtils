@@ -25,6 +25,7 @@ func _ready():
 				charVisualName = x.gameName
 				topTex = x.icon
 				botTex = x.icon_bg
+				overwrite = x.overwrite
 		moddedReady = true
 		updateChar()
 	size = Vector2i(50,50)
@@ -34,6 +35,10 @@ func updateChar():
 	if moddedReady:
 		char_icon.texture = topTex
 		char_icon_bg.texture = botTex
+		if overwrite:
+			if colorState == 0:
+				char_icon.modulate = color
+				char_icon_bg.modulate = color
 		button.title = charVisualName
 		button.update()
 

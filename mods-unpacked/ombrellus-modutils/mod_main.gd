@@ -287,7 +287,7 @@ func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 	}
 	Players.charData.merge(actual)
 	customCharAbility.merge(actualAbility)
-	customCharacters.append({gameName =data.displayName,icon =actual[characterNum].icon,icon_bg =actual[characterNum].icon_bg ,name = data.internalName,mod = modName,pos = characterNum,img = data.spritesExtension})
+	customCharacters.append({gameName =data.displayName,icon =actual[characterNum].icon,icon_bg =actual[characterNum].icon_bg ,name = data.internalName,mod = modName,pos = characterNum,img = data.spritesExtension, overwrite = data.overwrite})
 	Players.charList.append(characterNum)
 	Players.charNames.merge({
 		characterNum : data.internalName
