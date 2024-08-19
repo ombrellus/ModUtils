@@ -8,6 +8,7 @@ var mod:String = "booby sex"
 var moddedReady:bool = false
 var topTex
 var botTex
+var overwrite:bool
 
 func _ready():
 	super._ready()
