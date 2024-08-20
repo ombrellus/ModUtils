@@ -1,4 +1,5 @@
 extends Node
+class_name OMModUtils
 
 const AUTHORNAME_MODNAME_DIR := "ombrellus-modutils"
 const AUTHORNAME_MODNAME_LOG_NAME := "ombrellus-modutils:Main"
@@ -254,6 +255,7 @@ func addItemsToPool(modName:String,upgrades:Dictionary):
 #region CUSTOM CHARACTERS
 func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 	data.spawnRate = _checkForResource("res://mods-unpacked/"+modName+"/extensions/src/character/"+data.internalName+"/curve")
+	if not data.has("overwrite"): data["overwrite"] = false
 	var actual = {characterNum:{
 	internalName = data.internalName,
 	displayName = data.displayName,
@@ -389,6 +391,8 @@ func _debugWindow():
 	createDebugButton(holder,"Spawn Ambush",func():
 		if not thingier == null:
 			thingier.spawnAmbush())
+	createDebugButton(holder,"Spawn Mimic",func():
+		Utils.spawn(preload("res://src/enemy/tokenMimic/tokenMimic.tscn"),Global.main.getOutsidePosition(),Global.gameArea))
 
 func createDebugButton(cont:VBoxContainer,name:String,call:Callable):
 	var butt = Button.new()
