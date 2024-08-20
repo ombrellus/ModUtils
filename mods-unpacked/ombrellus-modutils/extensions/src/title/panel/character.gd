@@ -8,7 +8,7 @@ var mod:String = "booby sex"
 var moddedReady:bool = false
 var topTex
 var botTex
-var overwrite:bool
+var MU_overwrite:bool
 
 func _ready():
 	super._ready()
@@ -26,7 +26,7 @@ func _ready():
 				charVisualName = x.gameName
 				topTex = x.icon
 				botTex = x.icon_bg
-				overwrite = x.overwrite
+				MU_overwrite = x.overwrite
 		moddedReady = true
 		updateChar()
 	size = Vector2i(50,50)
@@ -36,7 +36,7 @@ func updateChar():
 	if moddedReady:
 		char_icon.texture = topTex
 		char_icon_bg.texture = botTex
-		if overwrite:
+		if MU_overwrite:
 			if colorState == 0:
 				char_icon.modulate = color
 				char_icon_bg.modulate = color
