@@ -11,11 +11,24 @@ var translations_dir_path := ""
 
 var coolAbilityCount:int = 0
 
+func useAbilityFunction(abilityNum, player):
+	if coolAbilityCount > 0:
+		if Global.escaped:
+			return
+		if (Global.abilityCooldown > 0.0 and Global.refreshStack <= 0):
+			return
+		var time:float = 140.0
+		Global.abilityTimer = time
+		Global.abilityCooldown = 1.0
+		Global.curAbility = abilityNum
+		Global.main.useAbility(abilityNum)
+
 var myCharacter:Dictionary ={
 		internalName = "cool_character",
 		displayName = "Cool",
 		ability_name = "Cool ability",
 		ability_icon = preload("res://src/player/bubbleBig.png"),
+		useAbility = Callable(useAbilityFunction),
 		abilityCooldown = func(delta):
 			Global.abilityCooldown -= 1.0/(25.0 - TorCurve.smoothCorner(max(1, coolAbilityCount), 19.0, 1.8, 2.8)) * delta,
 		wallShrinkSpeed = 1,
