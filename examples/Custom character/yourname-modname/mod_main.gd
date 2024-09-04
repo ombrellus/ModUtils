@@ -14,9 +14,14 @@ var coolAbilityCount:int = 0
 var myCharacter:Dictionary ={
 		internalName = "cool_character",
 		displayName = "Cool",
+		ability_name = "Cool ability",
+		ability_icon = preload("res://src/player/bubbleBig.png"),
+		abilityCooldown = func(delta):
+			Global.abilityCooldown -= 1.0/(25.0 - TorCurve.smoothCorner(max(1, coolAbilityCount), 19.0, 1.8, 2.8)) * delta,
 		wallShrinkSpeed = 1,
 		wallResistance = 1,
 		priceScale = 1.0,
+		shopOverrides = {},
 		# leave blank
 		skins = [""],
 		baseWealth = 0,
