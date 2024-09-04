@@ -63,20 +63,6 @@ func updateAttack(delta):
 
 func updateMove(delta):
 	root.velocity = Utils.lexp(root.velocity, root.moveDir * root.max_speed, 20.0 * delta)
-	
-
-func useAbility(delta):
-	if mod.coolAbilityCount > 0:
-		if Global.escaped:
-			return
-		if (Global.abilityCooldown > 0.0 and Global.refreshStack <= 0):
-			return
-		var time:float = 140.0
-		Global.abilityTimer = time
-		Global.abilityCooldown = 1.0
-		# a non existing ability
-		Global.curAbility = 7
-		Global.main.useAbility(7)
 
 #func draw():
 	#if not (Global.save.specialFace and Global.options.showFace):
