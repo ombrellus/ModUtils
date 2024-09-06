@@ -1,5 +1,5 @@
 # ModUtils
-Library for WindowKill content mods (Current version 1.2.2)
+Library for WindowKill content mods (Current version 1.3.0)
 
 Workshop page: https://steamcommunity.com/sharedfiles/filedetails/?id=3207573074&searchtext=
 
