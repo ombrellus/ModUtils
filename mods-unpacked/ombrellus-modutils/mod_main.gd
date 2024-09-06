@@ -24,6 +24,8 @@ var customGamemodes:Array[Dictionary]=[]
 var customTitleWidnows:Array[Dictionary]=[]
 var ambushes:Array[Dictionary]= []
 
+var nextBossQueue:Array
+
 var characterNum:int
 var allCharacterNum:int
 
@@ -79,17 +81,17 @@ func _init() -> void:
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/title/panel/character.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/title/panel/newRun.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/title/panel/endless.gd")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/player/player.gd")	
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/stats/recordStats.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/multiplayer/player_slot/player_slot.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/autoload/players.gd")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/shop/shopItem.gd")	
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/title/panel/challenge/challengeSetupScreen.gd")
 	
 
 func install_script_extensions() -> void:
 	
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/enemy/enemy.gd")
-	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/player/player.gd")
-	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/shop/shopItem.gd")
-
 func _on_current_config_changed(config: ModConfig) -> void:
 	# Check if the config of your mod has changed!
 	if config.mod_id == AUTHORNAME_MODNAME_DIR:
@@ -111,8 +113,13 @@ func _ready() -> void:
 	Events.runStarted.connect(_loadMain)
 	Events.bossSpawned.connect(_bossSpawnStuff)
 	Events.titleReturn.connect(_titleThings)
+	Events.runEnded.connect(_endThings)
+
+func _endThings():
+	resetItemVariables()
 
 func _titleThings():
+	resetItemVariables()
 	selectedGamemode= "none"
 	gamemodeMod= "none"
 	gaymodeCall= func():pass
@@ -132,25 +139,20 @@ func _disable():
 #endregion
 
 #region NODE HANDLING
-func shuffleBosses() -> Array:
-	Global.main.bossQueue = [
-			Global.main.BossSpike, Global.main.BossSnake, Global.main.BossSlime,
-			Global.main.BossSpike, Global.main.BossSnake, Global.main.BossSlime, Global.main.BossVirus,
-		]
-	if randf() < 0.33:
-			Global.main.bossQueue.append(Global.main.BossOrb)
+func shuffleBosses():
+	if not nextBossQueue.is_empty():
+		Global.main.bossQueue += nextBossQueue
+		Global.main.bossQueue.shuffle()
+		nextBossQueue.clear()
+	if Global.main.bossQueue.size() != 0: return
 	for i in customBosses:
 		if i.weight == 1.0:
-			Global.main.bossQueue.append(i.type)
+			nextBossQueue.append(i.type)
 		elif randf() < i.weight:
-			Global.main.bossQueue.append(i.type)
-	Global.main.bossQueue.shuffle()
-	bossQueueUpdated.emit(Global.main.bossQueue)
-	return Global.main.bossQueue
+			nextBossQueue.append(i.type)
 
 func _bossSpawnStuff(boss:Node):
-	if Global.main.bossQueue.size() == 0:
-		shuffleBosses()
+	shuffleBosses()
 
 func _findItemIcon(entry:String,charInt:String,modName:String) -> Resource:
 	var pathName:String = charInt+"_"+modName
@@ -175,19 +177,16 @@ func _loadMain():
 		Global.timedModeLimit = 60.0* customGamemodeArgs.timer
 	else:
 		Global.timedModeLimit = 60.0*20.0
-	if not customGamemodeArgs.enemy or not customGamemodeArgs.boss or not ambushes.is_empty():
-		var ifYouThinkOfSomethingBetterDMme = load("res://mods-unpacked/ombrellus-modutils/extensions/src/repellenteDiNemici.tscn").instantiate()
-		ifYouThinkOfSomethingBetterDMme.nemici = customGamemodeArgs.enemy
-		ifYouThinkOfSomethingBetterDMme.boss = customGamemodeArgs.boss
-		ifYouThinkOfSomethingBetterDMme.maxAmbush = ambushTimer
-		Global.main.add_child(ifYouThinkOfSomethingBetterDMme)
-		thingier = ifYouThinkOfSomethingBetterDMme
-	else: thingier = null
+	var ifYouThinkOfSomethingBetterDMme = load("res://mods-unpacked/ombrellus-modutils/extensions/src/repellenteDiNemici.tscn").instantiate()
+	ifYouThinkOfSomethingBetterDMme.nemici = customGamemodeArgs.enemy
+	ifYouThinkOfSomethingBetterDMme.boss = customGamemodeArgs.boss
+	ifYouThinkOfSomethingBetterDMme.maxAmbush = ambushTimer
+	Global.main.add_child(ifYouThinkOfSomethingBetterDMme)
+	thingier = ifYouThinkOfSomethingBetterDMme
 		
 	Global.main.enemySelection += customEnemies
 	for i in customBossQueue:
 		Global.main.bossQueue.insert(i.position,i.type)
-	ShopData.abilityChoices.merge(customCharAbility)
 	ShopData.shopItemChoices.merge(customUpgrades)
 	gaymodeCall.call()
 	if config.data.debug:
@@ -250,16 +249,26 @@ func addItemsToPool(modName:String,upgrades:Dictionary):
 		upgrades[i].internalName = i
 		Global.manifestCounts[i] = 0
 	customUpgrades.merge(upgrades)
+
+func resetItemVariables():
+	for i in customUpgrades:
+		if customUpgrades[i].has("reset"):
+			customUpgrades[i].reset.call()
 #endregion
 
 #region CUSTOM CHARACTERS
-func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
+func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary) -> int:
 	data.spawnRate = _checkForResource("res://mods-unpacked/"+modName+"/extensions/src/character/"+data.internalName+"/curve")
 	if not data.has("overwrite"): data["overwrite"] = false
 	var actual = {characterNum:{
 	internalName = data.internalName,
 	displayName = data.displayName,
 	ability = characterNum,
+	ability_icon = data.ability_icon,
+	ability_name = data.ability_name,
+	useAbility = data.useAbility,
+	abilityCooldown = data.abilityCooldown,
+	shopOverrides = data.shopOverrides,
 	spawnRate = data.spawnRate,
 	baseWealth = data.baseWealth,
 	wallShrinkSpeed = data.wallShrinkSpeed,
@@ -272,6 +281,8 @@ func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 	mod = modName,
 	unlocked = true,
 	}}
+	if data.has("getColor"):
+		actual[characterNum]["getColor"] = data.getColor
 	customItemIcons[data.internalName+"_"+modName] = {}
 	customItemNames[data.internalName+"_"+modName] = {}
 	var actualAbility={characterNum:{
@@ -289,6 +300,7 @@ func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 	}
 	Players.charData.merge(actual)
 	customCharAbility.merge(actualAbility)
+	ShopData.abilityChoices.merge(actualAbility)
 	customCharacters.append({gameName =data.displayName,icon =actual[characterNum].icon,icon_bg =actual[characterNum].icon_bg ,name = data.internalName,mod = modName,pos = characterNum,img = data.spritesExtension, overwrite = data.overwrite})
 	Players.charList.append(characterNum)
 	Players.charNames.merge({
@@ -299,12 +311,19 @@ func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary):
 	})
 	Players.updateUnlocks()
 	characterNum+=1
+	return characterNum - 1
 
 func addCharacterItemIcon(modName:String,charName:String,itemName:String,iconPath:String):
 	customItemIcons[charName+"_"+modName][itemName] = load(iconPath)
 
 func addCharacterItemName(modName:String,charName:String,itemName:String,newName:String):
 	customItemNames[charName+"_"+modName][itemName] = newName
+
+func getCharacterId(modName:String,charName:String) -> int:
+	for c in customCharacters:
+		if c.name == charName and c.mod == modName:
+			return c.pos
+	return -1
 #endregion
 
 #region CUSTOM GAMEMODES
@@ -403,7 +422,8 @@ func createDebugButton(cont:VBoxContainer,name:String,call:Callable):
 func _checkForScene(path:String) -> PackedScene:
 	if ResourceLoader.exists(path+".tscn"):
 		return load(path+".tscn")
-	elif loadScn:return load(path+".scn")
+	elif loadScn:
+		return load(path+".scn")
 	else:
 		print_debug("Could not find any file with the path " + path)
 		return null

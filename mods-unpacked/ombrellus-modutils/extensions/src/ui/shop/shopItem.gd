@@ -5,7 +5,9 @@ extends "res://src/ui/shop/shopItem.gd"
 func updateGroup():
 	if not Players.inMultiplayer:
 		for c in Players.getUniqueChars():
+			print("hallo")
 			if Players.charData[c].has("mod") :
+				print("there is mod")
 				var newIcon = utils._findItemIcon(entry.internalName,Players.charData[c].internalName,Players.charData[c].mod)
 				if newIcon!= null:
 					groupIcons = [newIcon]

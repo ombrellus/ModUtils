@@ -13,6 +13,9 @@ func _ready():
 
 func _process(delta):
 	if Global.paused: return
+	if Global.curAbility >= 8:
+		if not Global.escaped and Global.abilityCooldown > 0.0:
+			Players.charData[Global.curAbility].abilityCooldown.call(delta)
 	if not nemici:
 		Global.main.spawnTimer = 46
 	if not boss:

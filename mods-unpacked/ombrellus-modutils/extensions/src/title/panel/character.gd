@@ -18,7 +18,7 @@ func _ready():
 		List = Players.charList
 	
 	char = List[Global.title._charId-1]
-	if char >= 7:
+	if char >= 8:
 		for x in utils.customCharacters:
 			if x.pos == char:
 				charName = x.name
