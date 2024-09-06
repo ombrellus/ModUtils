@@ -268,7 +268,6 @@ func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary) -> in
 	ability_name = data.ability_name,
 	useAbility = data.useAbility,
 	abilityCooldown = data.abilityCooldown,
-	shopOverrides = data.shopOverrides,
 	spawnRate = data.spawnRate,
 	baseWealth = data.baseWealth,
 	wallShrinkSpeed = data.wallShrinkSpeed,
@@ -283,6 +282,10 @@ func addCustomCharacter(modName:String,data:Dictionary,ability:Dictionary) -> in
 	}}
 	if data.has("getColor"):
 		actual[characterNum]["getColor"] = data.getColor
+	if data.has("shopOverrides"):
+		actual[characterNum]["shopOverrides"] = data.shopOverrides
+	else:
+		actual[characterNum]["shopOverrides"] = {}
 	customItemIcons[data.internalName+"_"+modName] = {}
 	customItemNames[data.internalName+"_"+modName] = {}
 	var actualAbility={characterNum:{

@@ -7,24 +7,22 @@ func updateGroup():
 		for c in Players.getUniqueChars():
 			print("hallo")
 			if Players.charData[c].has("mod") :
-				print("there is mod")
-				var newIcon = utils._findItemIcon(entry.internalName,Players.charData[c].internalName,Players.charData[c].mod)
-				if newIcon!= null:
-					groupIcons = [newIcon]
-				var newName = utils._findItemName(entry.internalName,Players.charData[c].internalName,Players.charData[c].mod)
-				if newName!= "OkIHopeNoOneUsesThisLineAsAnActualName":
-					groupNames = [newName]
+				for i in Players.charData[c].shopOverrides:
+					var override = Players.charData[c].shopOverrides[i]
+					if entry.internalName == i:
+						if override.has("name"):
+							groupNames = [override.name]
+						if override.has("icon"):
+							groupIcons = [override.icon]
 	else:
 		for c in Players.getUniqueChars():
 			if Players.charData[c].has("mod") :
-				#var chars:Array[int] = Players.getUniqueChars()
-				#var charPos:int = chars.find(c)
-				var newIcon = utils._findItemIcon(entry.internalName,Players.charData[c].internalName,Players.charData[c].mod)
-				if newIcon!= null:
-					Utils.addUnique(groupIcons,newIcon)
-					
-				var newName = utils._findItemName(entry.internalName,Players.charData[c].internalName,Players.charData[c].mod)
-				if newName!= "OkIHopeNoOneUsesThisLineAsAnActualName":
-					Utils.addUnique(groupNames,newName)
+				for i in Players.charData[c].shopOverrides:
+					var override = Players.charData[c].shopOverrides[i]
+					if entry.internalName == i:
+						if override.has("name"):
+							Utils.addUnique(groupIcons,override.name)
+						if override.has("icon"):
+							Utils.addUnique(groupNames,override.icon)
 	super.updateGroup()
 
