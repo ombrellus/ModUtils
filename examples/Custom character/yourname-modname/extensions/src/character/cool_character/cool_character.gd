@@ -29,13 +29,6 @@ func updateChar():
 	#flash_canvas.queue_redraw()
 	pass
 
-func _process(delta):
-	#Abilty cooldown needs to me manually changed if you have a modded usable ability
-	if not Global.escaped:
-		if Global.abilityCooldown > 0.0:
-			var speed = 1.0/(25.0 - TorCurve.smoothCorner(max(1, mod.coolAbility), 19.0, 1.8, 2.8)) * delta
-			Global.abilityCooldown -= speed
-
 func updateAttack(delta):
 	shootTimer -= 1.0 * delta
 	if shootTimer <= 0.0 and root.shooting > 0.0:
