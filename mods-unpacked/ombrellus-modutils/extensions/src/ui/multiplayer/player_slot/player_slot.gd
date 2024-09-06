@@ -11,7 +11,7 @@ var botTex
 
 func updateChar(setState:bool =false):
 	super.updateChar(setState)
-	if Players.details[index].char >= 7:
+	if Players.details[index].char >= 8:
 		for x in utils.customCharacters:
 			if x.pos == Players.details[index].char:
 				charName = x.name

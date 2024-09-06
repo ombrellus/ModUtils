@@ -7,7 +7,7 @@
 				"ombrellus"
 			],
 			"compatible_game_version": [
-				"3.2.1"
+				"4.0.0"
 			],
 			"compatible_mod_loader_version": [
 				"6.2.0"
@@ -16,6 +16,11 @@
 				"$schema": "https://json-schema.org/draft/2020-12/schema",
 				"description": "Config",
 				"properties": {
+					"ambush": {
+						"default": 30,
+						"title": "Ambush timer",
+						"type": "integer"
+					},
 					"debug": {
 						"default": false,
 						"title": "Use Debug",
@@ -30,11 +35,6 @@
 						"default": true,
 						"title": "Load .scn scenes",
 						"type": "boolean"
-					},
-					"ambush":{
-						"default": 30,
-						"title": "Ambush timer",
-						"type": "integer"
 					}
 				},
 				"title": "Config",
@@ -52,6 +52,6 @@
 	},
 	"name": "modutils",
 	"namespace": "ombrellus",
-	"version_number": "1.2.0",
+	"version_number": "1.3.0",
 	"website_url": ""
 }
