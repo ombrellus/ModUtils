@@ -1,0 +1,62 @@
+[gd_scene load_steps=4 format=3 uid="uid://ctdyw1h5qoldi"]
+
+[ext_resource type="Script" path="res://mods-unpacked/ombrellus-modutils/extensions/src/chooser/shop_chooser.gd" id="1_vjvlh"]
+[ext_resource type="Texture2D" uid="uid://dvk2w4g1e6h7x" path="res://src/ui/shop/shopArrow.png" id="2_47u3e"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_8hc7p"]
+font_size = 22
+outline_size = 6
+outline_color = Color(0, 0, 0, 1)
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -299.0
+offset_bottom = -262.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_vjvlh")
+
+[node name="Label" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = -94.0
+offset_top = 34.0
+offset_right = 153.0
+offset_bottom = 60.0
+text = "Coins"
+label_settings = SubResource("LabelSettings_8hc7p")
+horizontal_alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 0
+offset_left = 59.0
+offset_right = 99.0
+offset_bottom = 60.0
+rotation = 1.5708
+
+[node name="TextureRect" type="TextureRect" parent="MarginContainer"]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_47u3e")
+stretch_mode = 3
+flip_h = true
+
+[node name="MarginContainer2" type="MarginContainer" parent="."]
+layout_mode = 0
+offset_top = 99.0
+offset_right = 40.0
+offset_bottom = 159.0
+rotation = -1.5708
+
+[node name="TextureRect2" type="TextureRect" parent="MarginContainer2"]
+layout_mode = 2
+mouse_filter = 2
+texture = ExtResource("2_47u3e")
+stretch_mode = 3
+flip_h = true
+
+[connection signal="gui_input" from="MarginContainer" to="." method="up_gui"]
+[connection signal="gui_input" from="MarginContainer2" to="." method="down_gui"]

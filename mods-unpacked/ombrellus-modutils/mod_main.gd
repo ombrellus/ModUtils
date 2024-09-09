@@ -12,7 +12,10 @@ signal enemyHit
 signal bossQueueUpdated
 
 var customUpgrades:Dictionary = {}
+var customCurrencies:Dictionary = {}
 var customCharAbility:Dictionary = {}
+
+var customShopsData:Dictionary ={}
 
 var thingier:Node
 
@@ -23,10 +26,13 @@ var customCharacters:Array[Dictionary] =[]
 var customGamemodes:Array[Dictionary]=[]
 var customTitleWidnows:Array[Dictionary]=[]
 var ambushes:Array[Dictionary]= []
+var shops:Array[int] = [1]
 
 var nextBossQueue:Array
 
+var shopNum:int = 0
 var characterNum:int
+var currencyNum:int = 2
 var allCharacterNum:int
 
 var selectedGamemode:String = "none"
@@ -36,35 +42,6 @@ var customGamemodeArgs:Dictionary = {timer=0.0,enemy=true,boss=true}
 
 var customItemNames:Dictionary
 var customItemIcons:Dictionary
-
-var coolUpgardes= {
-	cool = {
-		name = (func()->Array:
-			return ["coolness"]
-			),
-		icon = (func()->Array:
-			return [preload("res://src/ui/shop/wealth.svg")]
-			),
-		priceType = 0,
-		value = (func(): 
-			return Global.wealth
-			),
-		price = (func(): 
-			var total := 0
-			for d in Players.details:
-				#total += round(pow((Global.wealth+1), 2.0) * 25.0) * Players.charData[d.char].priceScale
-				total += round((36 + pow(2, 2.4*pow(Global.wealth, 0.5) + 4.0)) * Players.charData[d.char].priceScale)
-			return total
-			),
-		buy = (func():
-			Global.wealth += 1
-			print("coolness")
-			),
-		weight = 1,
-		_weight = 1,
-		baseWeight = 1,
-	}
-}
 var selectingGamemode:int = 0
 
 var loadScn:bool = true
@@ -85,7 +62,9 @@ func _init() -> void:
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/stats/recordStats.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/multiplayer/player_slot/player_slot.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/autoload/players.gd")
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/coin_count/coinCount.gd")
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/shop/shopItem.gd")	
+	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/ui/shop/shop.gd")	
 	ModLoaderMod.install_script_extension("res://mods-unpacked/ombrellus-modutils/extensions/src/title/panel/challenge/challengeSetupScreen.gd")
 	
 
@@ -114,6 +93,7 @@ func _ready() -> void:
 	Events.bossSpawned.connect(_bossSpawnStuff)
 	Events.titleReturn.connect(_titleThings)
 	Events.runEnded.connect(_endThings)
+	Events.restart.connect(_endThings)
 
 func _endThings():
 	resetItemVariables()
@@ -243,17 +223,42 @@ func resetModItems(modName:String):
 		if customUpgrades[i].mod == modName:
 			customUpgrades.erase(i)
 
-func addItemsToPool(modName:String,upgrades:Dictionary):
+func addItemsToPool(modName:String,upgrades:Dictionary, upgradesCurrency:int = -1):
 	for i in upgrades.keys():
 		upgrades[i].mod = modName
 		upgrades[i].internalName = i
+		if upgrades[i].priceType >= 2:
+			upgrades[i]["ModUtils_currency"] = upgradesCurrency
+			upgrades[i].priceType = 0
+		if upgradesCurrency != 1:
+			upgrades[i]["ModUtils_currency"] = upgradesCurrency
+			upgrades[i].priceType = 0
 		Global.manifestCounts[i] = 0
 	customUpgrades.merge(upgrades)
 
+func addItemsToCustomShop(modName:String,upgrades:Dictionary,currencyId:int, upgradesCurrency:int = -1):
+	for i in upgrades.keys():
+		upgrades[i].mod = modName
+		upgrades[i].internalName = i
+		if upgrades[i].priceType >= 2:
+			upgrades[i]["ModUtils_currency"] = upgradesCurrency
+			upgrades[i].priceType = 0
+		if upgradesCurrency != 1:
+			upgrades[i]["ModUtils_currency"] = upgradesCurrency
+			upgrades[i].priceType = 0
+		Global.manifestCounts[i] = 0
+	customShopsData[currencyId]= upgrades.duplicate(true)
+	print(customShopsData[currencyId])
+	
 func resetItemVariables():
 	for i in customUpgrades:
 		if customUpgrades[i].has("reset"):
 			customUpgrades[i].reset.call()
+	for i in customCurrencies:
+		customCurrencies[i].reset.call()
+	shops = [1]
+	shopNum = 0
+	
 #endregion
 
 #region CUSTOM CHARACTERS
@@ -340,13 +345,27 @@ func checkCustomGamemode(modName:String,gamemode:String)->bool:
 
 #endregion
 
+#region CUSTOM CURRENCY
+func addCustomCurrency(modName:String,data:Dictionary) -> int:
+	customCurrencies[currencyNum] = data.duplicate(true)
+	customCurrencies[currencyNum]["mod"] = modName
+	currencyNum +=1
+	return currencyNum - 1
+
+func getCurrencyId(modName:String, name:String) -> int:
+	for c in customCurrencies:
+		if customCurrencies[c]["mod"] == modName and customCurrencies[c]["name"] == name:
+			return c
+	return -1
+#endregion
+
 #region CUSTOM WINDOWS
 func addGameWindow(name:String,spawnPos:Vector2,size:Vector2,parent:Node = Global.gameArea,camera:bool=true,z_index:int = 10,no_drag:bool=false) -> Window:
 
 	var window = Window.new()
 	window.size = size
 	window.position = spawnPos
-	window.unresizable = true
+	window.unresizable = no_drag
 	window.set_meta("z_index",z_index)
 	window.set_meta("no_drag",no_drag)
 	window.always_on_top = Global.options.alwaysOnTop
@@ -378,13 +397,15 @@ func createTitleWindow(modName:String,name:String,icon:Texture2D,iconColor:Color
 
 #region DEBUG
 func _debugWindow():
-	var debugWin = addGameWindow("debug",Game.randomSpawnLocation(400,200),Vector2(300,300),Global.gameArea,false,30,false)
+	var debugWin = addGameWindow("debug",Game.randomSpawnLocation(400,200),Vector2(300,300),Global.gameArea,true,30,false)
+	var canvas = CanvasLayer.new()
 	var cont = Control.new()
 	cont.layout_direction =Control.LAYOUT_DIRECTION_LTR
 	cont.set_anchors_preset(Control.PRESET_TOP_LEFT)
 	cont.size = Vector2(300,300)
 	cont.mouse_filter=Control.MOUSE_FILTER_PASS
-	debugWin.add_child(cont)
+	canvas.add_child(cont)
+	debugWin.add_child(canvas)
 	var WHAT = ScrollContainer.new()
 	WHAT.layout_direction = Control.LAYOUT_DIRECTION_INHERITED
 	WHAT.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS
@@ -401,6 +422,8 @@ func _debugWindow():
 		Global.main.spawnBoss())
 	createDebugButton(holder,"Spawn next enemy",func():
 		Global.main.spawnTimer = 0)
+	createDebugButton(holder,"Spawn entity",func():
+		_createEntityWindow())
 	createDebugButton(holder,"Give 10k coins",func():
 		Global.coins = Global.coins + 10000)
 	createDebugButton(holder,"Spawn token",func():
@@ -421,6 +444,43 @@ func createDebugButton(cont:VBoxContainer,name:String,call:Callable):
 	butt.text = name
 	butt.button_down.connect(call)
 	cont.add_child(butt)
+
+func _createEntityWindow():
+	var debugWin = addGameWindow("Entity select",Game.randomSpawnLocation(400,200),Vector2(360,360),Global.gameArea,true,30,false)
+	debugWin.close_requested.connect(func():debugWin.queue_free())
+	var cont:Control = preload("res://mods-unpacked/ombrellus-modutils/extensions/src/chooser/entity_chooser.tscn").instantiate()
+	var canvas = CanvasLayer.new()
+	canvas.add_child(cont)
+	debugWin.add_child(canvas)
+	var grid:GridContainer = cont.get_child(0)
+	_addEntityButton("Spiker",Global.main.BossSpike,grid)
+	_addEntityButton("Wyrm",Global.main.BossSnake,grid)
+	_addEntityButton("Slime",Global.main.BossSlime,grid)
+	_addEntityButton("Smiley",Global.main.BossVirus,grid)
+	_addEntityButton("Orb array",Global.main.BossOrb,grid)
+	_addEntityButton("Miasma",Global.main.BossGermSource,grid)
+	var enemyNames:=["Triangle","Square","Circle","Hexagon","Heptagon","Splitter","Sweeper","Tunneller","Arrow"]
+	for i in Global.main.enemySelection:
+		var name:String = "Mod enemy"
+		if not enemyNames.is_empty():
+			name = enemyNames.pop_front()
+		_addEntityButton(name,i.type,grid)
+func _addEntityButton(name:String,scene:PackedScene,cont:GridContainer):
+	var entityButton:Button = Button.new()
+	entityButton.text = name
+	entityButton.custom_minimum_size = Vector2(80,50)
+	entityButton.button_up.connect(_spawnEntity.bind(scene,cont.get_parent().get_child(1)))
+	cont.add_child(entityButton)
+
+func _spawnEntity(entity:PackedScene,option:OptionButton):
+	var posRand:Vector2 = Game.randomSpawnLocation(400, 300.0)
+	match option.selected:
+		0:
+			Utils.spawn(entity, Game.randomPlayer().position, Global.gameArea)
+		1:
+			Utils.spawn(entity, Game.randomPlayer().position - Vector2(0,100), Global.gameArea)
+		3:
+			Utils.spawn(entity, posRand, Global.gameArea)
 
 func _checkForScene(path:String) -> PackedScene:
 	if ResourceLoader.exists(path+".tscn"):
